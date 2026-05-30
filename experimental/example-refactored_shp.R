@@ -1358,7 +1358,7 @@ emul_estimate_bootstrap <- function(
 emul_estimate_bootstrap(
   clones_weighted,
   method = "Cox",
-  n_bootstrap = 200,
+  n_bootstrap = 10,
   predictors = c("age", "sex")
 )
 emul_estimate_bootstrap(clones_weighted, method = "logistic", n_bootstrap = 200)
