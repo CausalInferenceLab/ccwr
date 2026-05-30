@@ -1213,6 +1213,10 @@ emul_estimate <- function(
     predictors = predictors,
     cluster = cluster
   )
+  km_formula <- emul_formula(
+    "survival::Surv(Tstart, Tstop, outcome)",
+    predictors = predictors
+  )
   logistic_formula <- emul_formula(
     "outcome",
     predictors = predictors
@@ -1250,7 +1254,7 @@ emul_estimate <- function(
     return(fit_logistic)
   } else if (method == "KM") {
     survfit_args <- list(
-      formula = cox_formula,
+      formula = km_formula,
       data = quote(dat)
     )
     if (!is.null(weight_col)) {
@@ -1361,4 +1365,4 @@ emul_estimate_bootstrap(
   n_bootstrap = 10,
   predictors = c("age", "sex")
 )
-emul_estimate_bootstrap(clones_weighted, method = "logistic", n_bootstrap = 200)
+emul_estimate_bootstrap(clones_weighted, method = "logistic", n_bootstrap = 10)
