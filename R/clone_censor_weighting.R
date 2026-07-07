@@ -16,6 +16,16 @@
 #' @return A tibble with one row per participant-strategy combination and the
 #'   additional columns `.clone_id`, `.regime`, `.censored`, and `.weight`.
 #' @export
+#' @examples
+#' data(lungcancer)
+#' cloned <- clone_censor_weighting(
+#'   lungcancer,
+#'   id = "id",
+#'   follow_up = "fup_obs",
+#'   event = "death",
+#'   treatment = "surgery",
+#'   regimes = c(0, 1)
+#' )
 clone_censor_weighting <- function(
     data,
     id,
@@ -86,6 +96,13 @@ clone_censor_weighting <- function(
 #'
 #' @return An object of class `"Surv"`.
 #' @export
+#' @examples
+#' data(lungcancer)
+#' surv_response <- make_surv_response(
+#'   lungcancer,
+#'   follow_up = "fup_obs",
+#'   event = "death"
+#' )
 make_surv_response <- function(data, follow_up, event) {
   .assert_data_frame(data)
   .assert_required_columns(data, c(follow_up, event))

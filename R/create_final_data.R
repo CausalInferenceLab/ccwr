@@ -1,81 +1,3 @@
-#' Create timestamp table
-#'
-#' @param clones A list of data frame. Each element of the list represents
-#'   each treatment arm. This version of clones must contain a column that
-#'   represents a emulated follow up time.
-#' @param clone_followup A column name in emulcated clone (i.e. `clones`)
-#'   that represents the emulated follow up time in cloned data frame.
-#'
-#' @returns A data frame with two columns: `tevent` and `ID_t`.
-#'   `tevent` represents a timestamp that outcome event can occur based on
-#'   observed data. `ID_t` represents an enumerated identifier of each
-#'   timestamp, from 1 to n where n represents the number of unique `tevent`
-#'   value.
-#'
-#' @export
-#' @examples
-create_timestamp_table <- function(clones, clone_followup) {
-  timestamps <- sapply(clones, `[[`, i = clone_followup, simplify = FALSE)
-  t_events <- sort(unique(unlist(timestamps)))
-  res <- dplyr::tibble(tevent = t_events, ID_t = seq_along(t_events))
-
-  res
-}
-
-
-#' Split each observation into multiple subrecords at each time cut
-#'
-#' @param clones A list of data frame. Each element of the list represents
-#'   each treatment arm. This version of clones must contain a column that
-#'   represents a emulated follow up time (corresponding to `clone_followup`
-#'   argument) and an event of interest (corresponding to `event` argument).
-#' @param clone_followup A column name in emulcated clone (i.e. `clones`)
-#'   that represents the emulated follow up time in cloned data frame.
-#' @param t_events A vector of timestamp that outcome event can occur based on
-#'   observed data.
-#' @param event A variable name of an event of interest. The variable should
-#'   exists in each data frame that is an element of `clones` argument, and
-#'   the variable value should be a binary (0 or 1).
-#' @param timestamp_start A new variable name to denote start time.
-#' @param id A new variable name for a unique observation identifier, to
-#'   represents that multiple rows in output data frame is associated with the
-#'   same observation.
-#'
-#' @returns A list of long-form data frames. Each data frame represents each
-#'   clone arm. Each row of the long-form data frame represents a subrecord of
-#'   each observation associated with each specific time interval. The first
-#'   subrecord starts with time 0, and the rows are expanded up to
-#'   `clone_followup`, where cut times are determined by `t_events` argument.
-#'
-#' @export
-#' @examples
-split_at_timestamp <- function(
-  clones,
-  clone_followup,
-  t_events,
-  event,
-  timestamp_start = "Tstart",
-  id = "ID"
-) {
-  arms <- names(clones)
-
-  res <- vector("list", length = length(arms))
-  names(res) <- arms
-  for (arm in arms) {
-    res[[arm]] <-
-      clones[[arm]] |>
-      survival::survSplit(
-        cut = t_events,
-        end = clone_followup,
-        start = timestamp_start,
-        event = event,
-        id = id
-      )
-  }
-
-  res
-}
-
 
 #' Create training data for censoring probability estimation
 #'
@@ -114,6 +36,27 @@ split_at_timestamp <- function(
 #'
 #' @export
 #' @examples
+#' data(lungcancer)
+#' arms <- c("Control", "Surgery")
+#' clones <- clone_arms(lungcancer, arms)
+#' policies <- create_policy_A(
+#'   arms, "surgery", "timetosurgery", 182.62, "death", "fup_obs",
+#'   clone_outcome = "outcome", clone_followup = "fup"
+#' )
+#' clones_policy <- apply_logics(clones, policies)
+#' censoring_logics <- create_censoring_logics_A(
+#'   arms, "surgery", "timetosurgery", 182.62, "fup_obs",
+#'   clone_censoring = "censoring",
+#'   clone_uncensored_followup = "fup_uncensored"
+#' )
+#' clones_censored <- apply_logics(clones_policy, censoring_logics)
+#' clones_final <- create_final_data(
+#'   clones_censored,
+#'   clone_followup = "fup",
+#'   clone_outcome = "outcome",
+#'   clone_censoring = "censoring",
+#'   col_ids = "id"
+#' )
 create_final_data <- function(
   clones,
   clone_followup,
@@ -124,6 +67,11 @@ create_final_data <- function(
   id = "ID",
   timestamp_stop = "Tstop"
 ) {
+  .assert_clone_columns(
+    clones,
+    c(clone_followup, clone_outcome, clone_censoring, col_ids)
+  )
+
   df_timestamp <- create_timestamp_table(clones, clone_followup)
 
   clones_splitted_by_outcome <- split_at_timestamp(
@@ -146,8 +94,16 @@ create_final_data <- function(
 
   # merge two tables and create column to represent end of timestamp
   df_timestamp_with_time_zero <-
-    df_timestamp |>
-    dplyr::bind_rows(dplyr::tibble(tevent = 0, ID_t = 0))
+    dplyr::bind_rows(
+      dplyr::tibble(tevent = 0, ID_t = 0),
+      df_timestamp
+    )
+  df_timestamp_with_time_zero <-
+    df_timestamp_with_time_zero[
+      !duplicated(df_timestamp_with_time_zero$tevent),
+      ,
+      drop = FALSE
+    ]
 
   n_clones <- length(clones)
   arms <- names(clones)
@@ -157,30 +113,28 @@ create_final_data <- function(
   for (i in seq_len(n_clones)) {
     x <-
       clones_splitted_by_outcome[[i]] |>
-      dplyr::select(!{{ clone_censoring }})
+      dplyr::select(-dplyr::all_of(clone_censoring))
 
     y <-
       clones_splitted_by_censoring[[i]] |>
       dplyr::select(
-        dplyr::all_of(col_ids),
-        {{ clone_followup }},
-        {{ clone_censoring }}
+        dplyr::all_of(c(col_ids, clone_followup, clone_censoring))
       )
 
     res[[i]] <-
       dplyr::inner_join(
         x,
         y,
-        by = dplyr::join_by({{ col_ids }}, {{ clone_followup }})
+        by = c(col_ids, clone_followup)
       ) |>
-      dplyr::mutate({{ timestamp_stop }} := .data[[clone_followup]])
+      dplyr::mutate(!!timestamp_stop := .data[[clone_followup]])
 
     # Merge with timestamp table
     res[[i]] <-
       res[[i]] |>
       dplyr::left_join(
         df_timestamp_with_time_zero,
-        by = dplyr::join_by({{ timestamp_start }} == tevent)
+        by = stats::setNames("tevent", timestamp_start)
       )
   }
 

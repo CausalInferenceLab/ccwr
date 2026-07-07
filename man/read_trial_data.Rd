@@ -17,3 +17,15 @@ A tibble.
 \description{
 Read trial-style data from CSV
 }
+\examples{
+csv_file <- tempfile(fileext = ".csv")
+writeLines(
+  c(
+    "id,follow_up,event,treatment",
+    "1,10,1,A",
+    "2,12,0,B"
+  ),
+  con = csv_file
+)
+trial_data <- read_trial_data(csv_file)
+}

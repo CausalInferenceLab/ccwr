@@ -69,3 +69,16 @@ creating new variables for emulated outcome and follow up time.
 \description{
 Generate clone policy for scenario A
 }
+\examples{
+arms <- c("Control", "Surgery")
+policies <- create_policy_A(
+  arms,
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  outcome = "death",
+  followup = "fup_obs",
+  clone_outcome = "outcome",
+  clone_followup = "fup"
+)
+}

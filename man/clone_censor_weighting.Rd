@@ -30,3 +30,14 @@ immediate deviations from the observed baseline treatment as censored clones.
 This is a light-weight scaffold for package development rather than a full
 causal inference implementation.
 }
+\examples{
+data(lungcancer)
+cloned <- clone_censor_weighting(
+  lungcancer,
+  id = "id",
+  follow_up = "fup_obs",
+  event = "death",
+  treatment = "surgery",
+  regimes = c(0, 1)
+)
+}

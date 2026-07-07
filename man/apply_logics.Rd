@@ -23,3 +23,19 @@ created by the provided logics.
 \description{
 Apply case_when logics (e.g. policy, censoring) to clones
 }
+\examples{
+data(lungcancer)
+arms <- c("Control", "Surgery")
+clones <- clone_arms(lungcancer, arms)
+policies <- create_policy_A(
+  arms,
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  outcome = "death",
+  followup = "fup_obs",
+  clone_outcome = "outcome",
+  clone_followup = "fup"
+)
+clones_policy <- apply_logics(clones, policies)
+}

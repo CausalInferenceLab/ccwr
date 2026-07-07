@@ -64,30 +64,73 @@ library(clonecensorweighting)
 ```r
 library(clonecensorweighting)
 
-trial_data <- tibble::tibble(
-  id = c(1, 2),
-  follow_up = c(10, 12),
-  event = c(1, 0),
-  treatment = c("A", "B")
+data(lungcancer)
+
+arms <- c("Control", "Surgery")
+clones <- clone_arms(lungcancer, arms)
+
+policies <- create_policy_A(
+  arms,
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  outcome = "death",
+  followup = "fup_obs",
+  clone_outcome = "outcome",
+  clone_followup = "fup"
+)
+clones_policy <- apply_logics(clones, policies)
+
+censoring_logics <- create_censoring_logics_A(
+  arms,
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  followup = "fup_obs",
+  clone_censoring = "censoring",
+  clone_uncensored_followup = "fup_uncensored"
+)
+clones_censored <- apply_logics(clones_policy, censoring_logics)
+
+clones_final <- create_final_data(
+  clones_censored,
+  clone_followup = "fup",
+  clone_outcome = "outcome",
+  clone_censoring = "censoring",
+  col_ids = "id"
 )
 
-clones <- clone_censor_weighting(
-  data = trial_data,
-  id = "id",
-  follow_up = "follow_up",
-  event = "event",
-  treatment = "treatment",
-  regimes = c("A", "B")
+clones_estimated <- estimate_censoring(
+  clones_final,
+  predictors = c("age", "sex"),
+  method = "pooled_logit"
+)
+clones_weighted <- weight_cases(clones_estimated)
+
+fit <- emul_estimate(
+  clones_weighted,
+  method = "Cox",
+  weights = "weight_Cox",
+  predictors = c("age", "sex")
 )
 
-clones
-
-make_surv_response(
-  data = trial_data,
-  follow_up = "follow_up",
-  event = "event"
-)
+exp(stats::coef(fit))
 ```
+
+The full process is:
+
+1. Clone each patient into the target trial arms with `clone_arms()`.
+2. Define and apply treatment-policy logic with `create_policy_A()` and
+   `apply_logics()`.
+3. Define and apply artificial censoring logic with
+   `create_censoring_logics_A()` and `apply_logics()`.
+4. Expand cloned observations into long-form interval data with
+   `create_final_data()`.
+5. Estimate censoring probabilities with `estimate_censoring()`.
+6. Add inverse probability of censoring weights with `weight_cases()`.
+7. Estimate the emulated trial effect with `emul_estimate()`.
+8. Use `emul_estimate_bootstrap()` when bootstrap confidence intervals are
+   needed.
 
 ## What the package currently provides
 
@@ -97,6 +140,15 @@ now it includes:
 - `read_trial_data()` to read trial-style CSV data into a tibble
 - `clone_censor_weighting()` to create a starter cloned dataset across regimes
 - `make_surv_response()` to build a `survival::Surv()` response object
+- `clone_arms()` to duplicate observations across treatment strategies
+- `create_policy_A()` and `create_censoring_logics_A()` to generate example
+  treatment-policy and artificial-censoring logic for the lung cancer scenario
+- `apply_logics()` to apply policy or censoring logic to cloned data
+- `create_final_data()` to create long-form interval data for censoring models
+- `estimate_censoring()` and `weight_cases()` to estimate censoring
+  probabilities and add IPC weights
+- `emul_estimate()` and `emul_estimate_bootstrap()` to estimate treatment
+  effects and bootstrap confidence intervals
 
 ## Working together on this repository
 

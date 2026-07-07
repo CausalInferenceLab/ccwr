@@ -69,3 +69,15 @@ time.
 \description{
 Generate censoring logic for scenario A
 }
+\examples{
+arms <- c("Control", "Surgery")
+censoring_logics <- create_censoring_logics_A(
+  arms,
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  followup = "fup_obs",
+  clone_censoring = "censoring",
+  clone_uncensored_followup = "fup_uncensored"
+)
+}

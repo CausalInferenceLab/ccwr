@@ -13,6 +13,20 @@
 #'
 #' @export
 #' @examples
+#' data(lungcancer)
+#' arms <- c("Control", "Surgery")
+#' clones <- clone_arms(lungcancer, arms)
+#' policies <- create_policy_A(
+#'   arms,
+#'   treatment = "surgery",
+#'   time_to_treatment = "timetosurgery",
+#'   grace_period = 182.62,
+#'   outcome = "death",
+#'   followup = "fup_obs",
+#'   clone_outcome = "outcome",
+#'   clone_followup = "fup"
+#' )
+#' clones_policy <- apply_logics(clones, policies)
 apply_logics <- function(
   clones,
   logics
@@ -91,6 +105,17 @@ apply_logics <- function(
 #'
 #' @export
 #' @examples
+#' arms <- c("Control", "Surgery")
+#' policies <- create_policy_A(
+#'   arms,
+#'   treatment = "surgery",
+#'   time_to_treatment = "timetosurgery",
+#'   grace_period = 182.62,
+#'   outcome = "death",
+#'   followup = "fup_obs",
+#'   clone_outcome = "outcome",
+#'   clone_followup = "fup"
+#' )
 create_policy_A <- function(
   arms,
   treatment,
@@ -203,6 +228,16 @@ create_policy_A <- function(
 #'
 #' @export
 #' @examples
+#' arms <- c("Control", "Surgery")
+#' censoring_logics <- create_censoring_logics_A(
+#'   arms,
+#'   treatment = "surgery",
+#'   time_to_treatment = "timetosurgery",
+#'   grace_period = 182.62,
+#'   followup = "fup_obs",
+#'   clone_censoring = "censoring",
+#'   clone_uncensored_followup = "fup_uncensored"
+#' )
 create_censoring_logics_A <- function(
   arms,
   treatment,

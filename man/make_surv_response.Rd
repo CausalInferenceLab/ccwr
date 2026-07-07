@@ -19,3 +19,11 @@ An object of class \code{"Surv"}.
 \description{
 Construct a survival response
 }
+\examples{
+data(lungcancer)
+surv_response <- make_surv_response(
+  lungcancer,
+  follow_up = "fup_obs",
+  event = "death"
+)
+}

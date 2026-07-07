@@ -1,8 +1,13 @@
 Package: clonecensorweighting
 Title: Infrastructure for Clone-Censor-Weighting Analyses
 Version: 0.0.0.9000
-Authors@R:
-    person("Sang Ho", "Park", email = "shstat1729@gmail.com", role = c("aut", "cre"))
+Authors@R: c(
+    person("Sang Ho", "Park", email = "shstat1729@gmail.com", role = c("aut", "cre")),
+    person("Youngrok", "Lee", role = "aut")
+    )
+Author: Sang Ho Park [aut, cre],
+    Youngrok Lee [aut]
+Maintainer: Sang Ho Park <shstat1729@gmail.com>
 Description: Provides a starter package for clone-censor-weighting workflows
     used in target trial emulation. The package currently includes data
     ingestion helpers, a minimal data cloning routine, and utilities for
