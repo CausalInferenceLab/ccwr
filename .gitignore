@@ -16,3 +16,5 @@ src/*.dylib
 
 example_data/
 .DS_Store
+/doc/
+/Meta/

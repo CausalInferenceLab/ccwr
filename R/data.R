@@ -23,4 +23,30 @@
 #'   \item{emergency}{route to diagnosis}
 #' }
 #' @source <https://doi.org/10.1093/ije/dyaa057>
+#' @examples
+#' data(lungcancer)
 "lungcancer"
+
+
+#' 13 types of patient records in Maringe et al. (2020)
+#'
+#' The dataset is from Figure 2 in [Maringe et al. (2020)](https://doi.org/10.1093/ije/dyaa057).
+#' The dataset illustrates all possible censoring mechanisms with 13 types of 
+#' patients records that could be seen in the cancer registry data, when 
+#' allowing at most one treatment (surgery in this example) for each patient
+#' and outcome event (death in this example) happens at most once for each
+#' patient.
+#'
+#' @format ## `patients13`
+#' A data frame with 13 rows and 5 columns:
+#' \describe{
+#'   \item{id}{patient identifier}
+#'   \item{surgery}{observed treatment 1 if the patient received surgery within 6 month, 0 otherwise}
+#'   \item{timetosurgery}{time to surgery (NA if no surgery)}
+#'   \item{death}{observed event at the latest follow-up, 1: dead, 0: alive}
+#'   \item{followup}{observed follow-up time (time to death or time to latest followup with 1 year (365 days) at maximum)}
+#' }
+#' @source <https://doi.org/10.1093/ije/dyaa057>
+#' @examples
+#' data(patients13)
+"patients13"
