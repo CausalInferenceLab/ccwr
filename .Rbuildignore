@@ -11,3 +11,5 @@
 ^example_data/
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^doc$
+^Meta$
