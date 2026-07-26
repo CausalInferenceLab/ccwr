@@ -112,16 +112,17 @@ estimate_censoring <- function(
         survival::basehaz(ms_cens, centered = FALSE)
       )
       names(base_hazard) <- c("hazard", "t")
+      hazard_index <- findInterval(dat[[time_start]], base_hazard$t)
+      baseline_hazard <- numeric(nrow(dat))
+      has_hazard <- hazard_index > 0L
+      baseline_hazard[has_hazard] <-
+        base_hazard$hazard[hazard_index[has_hazard]]
 
       res[[arm]] <-
         dat |>
-        dplyr::mutate(lin_pred = .env[["lin_pred"]]) |>
-        dplyr::left_join(
-          base_hazard,
-          by = stats::setNames("t", time_start)
-        ) |>
         dplyr::mutate(
-          hazard = dplyr::coalesce(.data$hazard, 0),
+          lin_pred = .env[["lin_pred"]],
+          hazard = .env[["baseline_hazard"]],
           P_uncens = exp(-.data$hazard * exp(.data$lin_pred))
         )
     } else {

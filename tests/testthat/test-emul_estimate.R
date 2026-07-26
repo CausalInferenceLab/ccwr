@@ -41,20 +41,79 @@ test_that("emul_estimate accepts data frame input with an arm column", {
   expect_s3_class(fit, "coxph")
 })
 
-test_that("emul_estimate_bootstrap returns percentile intervals", {
+test_that("emul_estimate_bootstrap repeats the complete analysis", {
+  data(lungcancer)
+  estimate_calls <- 0L
+  original_estimate_censoring <- estimate_censoring
+  local_mocked_bindings(
+    estimate_censoring = function(...) {
+      estimate_calls <<- estimate_calls + 1L
+      original_estimate_censoring(...)
+    },
+    .package = "clonecensorweighting"
+  )
+
   result <- emul_estimate_bootstrap(
-    make_weighted_clones(),
+    lungcancer,
+    arms = c("Control", "Surgery"),
+    id = "id",
+    treatment = "surgery",
+    time_to_treatment = "timetosurgery",
+    grace_period = 182.62,
+    outcome = "death",
+    followup = "fup_obs",
+    censoring_predictors = c("age", "sex"),
     method = "Cox",
-    weights = "weight_Cox",
+    predictors = c("age", "sex"),
     n_bootstrap = 3,
     seed = 1
   )
 
-  expect_named(result, c("ci_lower", "ci_upper", "estimates"))
+  expect_equal(estimate_calls, 4L)
+  expect_named(
+    result,
+    c(
+      "estimate",
+      "ci_lower",
+      "ci_upper",
+      "estimates",
+      "n_bootstrap",
+      "conf_level",
+      "method",
+      "censoring_method"
+    )
+  )
+  expect_equal(result$estimate, 0.4905093388, tolerance = 1e-7)
+  expect_equal(
+    result$estimates,
+    c(0.5056717858, 0.6770176964, 0.6370150551),
+    tolerance = 1e-7
+  )
   expect_length(result$estimates, 3)
   expect_true(all(is.finite(result$estimates)))
   expect_true(is.finite(result$ci_lower))
   expect_true(is.finite(result$ci_upper))
+})
+
+test_that("emul_estimate_bootstrap requires unique subject-level rows", {
+  data(lungcancer)
+  duplicated_subjects <- lungcancer
+  duplicated_subjects$id[[2]] <- duplicated_subjects$id[[1]]
+
+  expect_error(
+    emul_estimate_bootstrap(
+      duplicated_subjects,
+      arms = c("Control", "Surgery"),
+      id = "id",
+      treatment = "surgery",
+      time_to_treatment = "timetosurgery",
+      grace_period = 182.62,
+      outcome = "death",
+      followup = "fup_obs",
+      n_bootstrap = 2
+    ),
+    "uniquely identify"
+  )
 })
 
 test_that("estimation helper functions remain internal", {

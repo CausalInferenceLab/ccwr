@@ -408,8 +408,10 @@ summary(cox_fit)$conf.int
 
 Because the weights make the effective sample differ from the raw data, the
 model-based standard error is unreliable. `emul_estimate_bootstrap()` resamples
-patients (the clustering unit) $B$ times, refits the model to each resample, and
-takes the percentile interval of the resulting hazard ratios,
+patients from the original subject-level data $B$ times. Within every resample,
+it repeats cloning, artificial censoring, person-time expansion, censoring-model
+estimation, weighting, and outcome-model estimation before taking the
+percentile interval of the resulting hazard ratios,
 
 $$
 \big(\widehat{\mathrm{HR}}^{*}_{(\alpha/2)},\ \widehat{\mathrm{HR}}^{*}_{(1-\alpha/2)}\big),
@@ -420,14 +422,25 @@ for speed.
 
 ```{r bootstrap}
 boot <- emul_estimate_bootstrap(
-  clones_weighted,
-  method      = "Cox",
-  weights     = "weight_Cox",
-  predictors  = c("age", "sex"),
-  n_bootstrap = 200,
-  seed        = 1
+  lungcancer,
+  arms                   = arms,
+  id                     = "id",
+  treatment              = "surgery",
+  time_to_treatment      = "timetosurgery",
+  grace_period           = grace_period,
+  outcome                = "death",
+  followup               = "fup_obs",
+  censoring_predictors   = c("age", "sex"),
+  method                 = "Cox",
+  predictors             = c("age", "sex"),
+  n_bootstrap            = 10,
+  seed                   = 1
 )
-c(HR_lower = unname(boot$ci_lower), HR_upper = unname(boot$ci_upper))
+c(
+  HR = boot$estimate,
+  HR_lower = boot$ci_lower,
+  HR_upper = boot$ci_upper
+)
 ```
 
 For a visual summary, `method = "KM"` returns weighted Kaplan-Meier curves for

@@ -64,6 +64,54 @@ test_that("estimate_censoring supports Cox censoring models", {
   expect_true(all(result$Control$P_uncens <= 1))
 })
 
+test_that("Cox baseline hazard is carried forward between event times", {
+  dat <- tibble::tibble(
+    id = c(1, 2, 3),
+    Tstart = c(0, 1.5, 0),
+    Tstop = c(1, 2, 2),
+    censoring = c(1, 0, 0)
+  )
+  clones <- list(Control = dat, Surgery = dat)
+
+  result <- estimate_censoring(
+    clones,
+    method = "Cox"
+  )
+
+  fit <- survival::coxph(
+    survival::Surv(Tstart, Tstop, censoring) ~ 1,
+    data = dat,
+    ties = "efron"
+  )
+  base_hazard <- survival::basehaz(fit, centered = FALSE)
+  hazard_index <- findInterval(dat$Tstart, base_hazard$time)
+  expected_hazard <- numeric(nrow(dat))
+  expected_hazard[hazard_index > 0L] <-
+    base_hazard$hazard[hazard_index[hazard_index > 0L]]
+
+  expect_equal(result$Control$hazard, expected_hazard)
+  expect_gt(result$Control$hazard[dat$Tstart == 1.5], 0)
+  expect_equal(
+    result$Control$P_uncens,
+    exp(-expected_hazard * exp(result$Control$lin_pred))
+  )
+})
+
+test_that("cumulative uncensoring uses probabilities from prior intervals", {
+  dat <- tibble::tibble(
+    id = c(1, 1, 1, 2, 2),
+    Tstart = c(0, 1, 2, 0, 1),
+    Tstop = c(1, 2, 3, 1, 2)
+  )
+
+  result <- cumulative_uncensoring(
+    dat,
+    p_censoring = c(0.2, 0.5, 0.1, 0.25, 0.4)
+  )
+
+  expect_equal(result, c(1, 0.8, 0.4, 1, 0.75))
+})
+
 test_that("weight_cases creates unstabilized and stabilized IPC weights", {
   unstabilized <- list(
     Control = tibble::tibble(P_uncens = c(1, 0.5)),

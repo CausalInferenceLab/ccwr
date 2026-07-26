@@ -15,3 +15,7 @@ test_that("read_trial_data reads csv input into a tibble", {
   expect_equal(names(result), c("id", "follow_up", "event", "treatment"))
   expect_equal(nrow(result), 2)
 })
+
+
+
+

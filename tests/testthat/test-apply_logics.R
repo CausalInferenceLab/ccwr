@@ -51,3 +51,37 @@ test_that("definition of the outcome and survival time for each patient in each 
       )
   )
 })
+
+test_that("artificial censoring matches all 13 Maringe patient patterns", {
+  data(patients13)
+
+  arms <- c("Control", "Surgery")
+  clones <- clone_arms(patients13, arms)
+  censoring <- create_censoring_logics_A(
+    arms = arms,
+    treatment = "surgery",
+    time_to_treatment = "time_to_surgery",
+    grace_period = 182,
+    followup = "followup",
+    clone_censoring = "artificial_censoring",
+    clone_uncensored_followup = "censoring_time"
+  )
+  result <- apply_logics(clones, censoring)
+
+  expect_equal(
+    result$Control$artificial_censoring,
+    as.integer(patients13$id %in% c("A", "B", "C", "D", "E"))
+  )
+  expect_equal(
+    result$Control$censoring_time,
+    c(61, 150, 20, 140, 10, 182, 182, 182, 182, 182, 40, 140, 182)
+  )
+  expect_equal(
+    result$Surgery$artificial_censoring,
+    as.integer(patients13$id %in% c("F", "G", "H", "I", "J", "M"))
+  )
+  expect_equal(
+    result$Surgery$censoring_time,
+    c(61, 150, 20, 140, 10, 182, 182, 182, 182, 182, 40, 140, 182)
+  )
+})

@@ -39,6 +39,7 @@ make_lungcancer_workflow <- function() {
   clones_weighted <- weight_cases(clones_estimated)
 
   list(
+    data = lungcancer,
     clones = clones,
     clones_final = clones_final,
     clones_estimated = clones_estimated,
@@ -79,9 +80,16 @@ test_that("lungcancer weighted data supports emulated trial estimation", {
     weights = "weight_Cox"
   )
   boot <- emul_estimate_bootstrap(
-    workflow$clones_weighted,
+    workflow$data,
+    arms = c("Control", "Surgery"),
+    id = "id",
+    treatment = "surgery",
+    time_to_treatment = "timetosurgery",
+    grace_period = 182.62,
+    outcome = "death",
+    followup = "fup_obs",
+    censoring_predictors = c("age", "sex"),
     method = "Cox",
-    weights = "weight_Cox",
     predictors = c("age", "sex"),
     n_bootstrap = 3,
     seed = 1
@@ -90,6 +98,7 @@ test_that("lungcancer weighted data supports emulated trial estimation", {
   expect_s3_class(cox_fit, "coxph")
   expect_true(all(is.finite(stats::coef(cox_fit))))
   expect_s3_class(km_fit, "survfit")
+  expect_equal(boot$estimate, 0.4905093388, tolerance = 1e-7)
   expect_length(boot$estimates, 3)
   expect_true(all(is.finite(boot$estimates)))
   expect_true(is.finite(boot$ci_lower))

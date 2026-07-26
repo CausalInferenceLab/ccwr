@@ -2,7 +2,6 @@
 
 export(apply_logics)
 export(clone_arms)
-export(clone_censor_weighting)
 export(create_censoring_logics_A)
 export(create_final_data)
 export(create_policy_A)

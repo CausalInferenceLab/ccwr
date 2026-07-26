@@ -2,84 +2,93 @@
 % Please edit documentation in R/emul_estimate_bootstrap.R
 \name{emul_estimate_bootstrap}
 \alias{emul_estimate_bootstrap}
-\title{Bootstrap the emulated trial effect}
+\title{Bootstrap a complete clone-censor-weight analysis}
 \usage{
 emul_estimate_bootstrap(
-  clones_weighted,
+  data,
+  arms,
+  id,
+  treatment,
+  time_to_treatment,
+  grace_period,
+  outcome,
+  followup,
+  censoring_predictors = NULL,
+  censoring_method = c("pooled_logit", "stabilized_logit", "Cox"),
+  numerator_predictors = NULL,
   method = c("Cox", "logistic"),
-  cluster = "id",
   predictors = NULL,
-  weights = NULL,
   n_bootstrap = 200,
-  outcome = "outcome",
-  time_start = "Tstart",
-  time_stop = "Tstop",
-  arm = "arms",
   conf_level = 0.95,
+  eps = 1e-06,
   seed = NULL
 )
 }
 \arguments{
-\item{clones_weighted}{A named list of weighted clone data frames, or a
-single data frame containing an arm column.}
+\item{data}{A data frame with one row per subject.}
 
-\item{method}{Analysis method: \code{"Cox"} or \code{"logistic"}.}
+\item{arms}{A character vector of length two. The first element names the
+strategy of not receiving treatment during the grace period; the second
+names the strategy of receiving treatment during the grace period.}
 
-\item{cluster}{Column name identifying resampling clusters.}
+\item{id}{Name of the column that uniquely identifies subjects.}
 
-\item{predictors}{Optional adjustment predictors.}
+\item{treatment}{Name of the binary treatment column.}
 
-\item{weights}{Optional weight column name. Unquoted column names are also
-accepted when they exist in the data.}
+\item{time_to_treatment}{Name of the numeric time-to-treatment column.}
+
+\item{grace_period}{Positive numeric length of the treatment grace period.}
+
+\item{outcome}{Name of the binary outcome column.}
+
+\item{followup}{Name of the numeric follow-up-time column.}
+
+\item{censoring_predictors}{Optional character vector of predictors for the
+denominator censoring model.}
+
+\item{censoring_method}{Censoring model passed to \code{\link[=estimate_censoring]{estimate_censoring()}}:
+\code{"pooled_logit"}, \code{"stabilized_logit"}, or \code{"Cox"}.}
+
+\item{numerator_predictors}{Optional character vector of predictors for the
+numerator model when \code{censoring_method = "stabilized_logit"}.}
+
+\item{method}{Outcome analysis method: \code{"Cox"} or \code{"logistic"}.}
+
+\item{predictors}{Optional adjustment predictors for the outcome model.}
 
 \item{n_bootstrap}{Number of bootstrap resamples.}
 
-\item{outcome}{Column name for the outcome indicator.}
-
-\item{time_start}{Column name for interval start time.}
-
-\item{time_stop}{Column name for interval stop time.}
-
-\item{arm}{Column name for treatment arm after binding clone lists.}
-
 \item{conf_level}{Confidence level for the percentile interval.}
+
+\item{eps}{Probability floor passed to \code{\link[=estimate_censoring]{estimate_censoring()}} and
+\code{\link[=weight_cases]{weight_cases()}}.}
 
 \item{seed}{Optional random seed.}
 }
 \value{
-A list with \code{ci_lower}, \code{ci_upper}, and bootstrap \code{estimates}.
+A list containing the full-sample effect estimate, percentile
+confidence limits, bootstrap estimates, and analysis settings. Effects are
+returned on the exponentiated coefficient scale: a hazard ratio for Cox
+models and an odds ratio for logistic models.
 }
 \description{
-Bootstrap the emulated trial effect
+Resamples subjects from the original subject-level data and repeats the
+complete analysis in every bootstrap replicate: cloning, strategy-specific
+artificial censoring, person-time expansion, censoring-model estimation,
+weighting, and outcome-model estimation.
 }
 \examples{
 data(lungcancer)
-arms <- c("Control", "Surgery")
-clones <- clone_arms(lungcancer, arms)
-policies <- create_policy_A(
-  arms, "surgery", "timetosurgery", 182.62, "death", "fup_obs",
-  clone_outcome = "outcome", clone_followup = "fup"
-)
-clones_policy <- apply_logics(clones, policies)
-censoring_logics <- create_censoring_logics_A(
-  arms, "surgery", "timetosurgery", 182.62, "fup_obs",
-  clone_censoring = "censoring",
-  clone_uncensored_followup = "fup_uncensored"
-)
-clones_censored <- apply_logics(clones_policy, censoring_logics)
-clones_final <- create_final_data(
-  clones_censored, "fup", "outcome", "censoring", "id"
-)
-clones_estimated <- estimate_censoring(
-  clones_final,
-  predictors = c("age", "sex"),
-  method = "pooled_logit"
-)
-clones_weighted <- weight_cases(clones_estimated)
 boot <- emul_estimate_bootstrap(
-  clones_weighted,
-  method = "Cox",
-  weights = "weight_Cox",
+  lungcancer,
+  arms = c("Control", "Surgery"),
+  id = "id",
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  outcome = "death",
+  followup = "fup_obs",
+  censoring_predictors = c("age", "sex"),
   predictors = c("age", "sex"),
   n_bootstrap = 3,
   seed = 1

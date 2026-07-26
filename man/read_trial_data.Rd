@@ -9,7 +9,7 @@ read_trial_data(file, show_col_types = FALSE)
 \arguments{
 \item{file}{Path to a CSV file.}
 
-\item{show_col_types}{Passed to \code{\link[readr:read_csv]{readr::read_csv()}}.}
+\item{show_col_types}{Passed to \code{\link[readr:read_delim]{readr::read_csv()}}.}
 }
 \value{
 A tibble.
