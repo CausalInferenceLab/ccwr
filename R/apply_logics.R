@@ -154,7 +154,7 @@ create_policy_A <- function(
           "{treatment} == 0 & {followup} <= {grace_period} ~ {outcome}"
         ),
         glue::glue(
-          "({treatment} == 0 & {followup} > {grace_period}) | ({treatment} == 0 & {time_to_treatment} > {grace_period}) ~ 0"
+          "({treatment} == 0 & {followup} > {grace_period}) | ({treatment} == 1 & {time_to_treatment} > {grace_period}) ~ 0"
         )
       ),
       followup = c(
@@ -165,7 +165,7 @@ create_policy_A <- function(
           "{treatment} == 0 & {followup} <= {grace_period} ~ {followup}"
         ),
         glue::glue(
-          "({treatment} == 0 & {followup} > {grace_period}) | ({treatment} == 0 & {time_to_treatment} > {grace_period}) ~ {grace_period}"
+          "({treatment} == 0 & {followup} > {grace_period}) | ({treatment} == 1 & {time_to_treatment} > {grace_period}) ~ {grace_period}"
         )
       )
     )
