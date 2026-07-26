@@ -80,9 +80,11 @@ test_that("emul_estimate_bootstrap repeats the complete analysis", {
       "n_bootstrap",
       "conf_level",
       "method",
-      "censoring_method"
+      "censoring_method",
+      "censoring_time_spline_df"
     )
   )
+  expect_null(result$censoring_time_spline_df)
   expect_equal(result$estimate, 0.4905093388, tolerance = 1e-7)
   expect_equal(
     result$estimates,

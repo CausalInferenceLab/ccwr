@@ -21,6 +21,10 @@
 #'   `"pooled_logit"`, `"stabilized_logit"`, or `"Cox"`.
 #' @param numerator_predictors Optional character vector of predictors for the
 #'   numerator model when `censoring_method = "stabilized_logit"`.
+#' @param censoring_time_spline_df Degrees of freedom for the natural cubic
+#'   spline of interval start time in pooled-logistic censoring models. Set to
+#'   an integer of at least `2` to use a spline. The default `NULL` uses a
+#'   linear time term. Ignored when `censoring_method = "Cox"`.
 #' @param method Outcome analysis method: `"Cox"` or `"logistic"`.
 #' @param predictors Optional adjustment predictors for the outcome model.
 #' @param n_bootstrap Number of bootstrap resamples.
@@ -62,6 +66,7 @@ emul_estimate_bootstrap <- function(
   censoring_predictors = NULL,
   censoring_method = c("pooled_logit", "stabilized_logit", "Cox"),
   numerator_predictors = NULL,
+  censoring_time_spline_df = NULL,
   method = c("Cox", "logistic"),
   predictors = NULL,
   n_bootstrap = 200,
@@ -112,6 +117,7 @@ emul_estimate_bootstrap <- function(
     censoring_predictors = censoring_predictors,
     censoring_method = censoring_method,
     numerator_predictors = numerator_predictors,
+    censoring_time_spline_df = censoring_time_spline_df,
     method = method,
     predictors = predictors,
     eps = eps
@@ -144,6 +150,7 @@ emul_estimate_bootstrap <- function(
       censoring_predictors = censoring_predictors,
       censoring_method = censoring_method,
       numerator_predictors = numerator_predictors,
+      censoring_time_spline_df = censoring_time_spline_df,
       method = method,
       predictors = predictors,
       eps = eps
@@ -169,7 +176,8 @@ emul_estimate_bootstrap <- function(
     n_bootstrap = n_bootstrap,
     conf_level = conf_level,
     method = method,
-    censoring_method = censoring_method
+    censoring_method = censoring_method,
+    censoring_time_spline_df = censoring_time_spline_df
   )
 }
 
@@ -188,6 +196,7 @@ run_ccw_analysis <- function(
   censoring_predictors,
   censoring_method,
   numerator_predictors,
+  censoring_time_spline_df,
   method,
   predictors,
   eps
@@ -255,6 +264,7 @@ run_ccw_analysis <- function(
     id = subject_id,
     time_start = ".ccw_tstart",
     time_stop = ".ccw_tstop",
+    time_spline_df = censoring_time_spline_df,
     eps = eps
   )
   clones <- weight_cases(

@@ -72,6 +72,17 @@
   }
 }
 
+.assert_spline_df <- function(x, arg) {
+  if (is.null(x)) {
+    return(invisible(x))
+  }
+  .assert_positive_integer(x, arg)
+  if (x < 2L) {
+    stop("`", arg, "` must be NULL or an integer of at least 2.", call. = FALSE)
+  }
+  invisible(x)
+}
+
 .assert_conf_level <- function(conf_level) {
   if (
     !is.numeric(conf_level) ||

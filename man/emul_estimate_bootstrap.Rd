@@ -16,6 +16,7 @@ emul_estimate_bootstrap(
   censoring_predictors = NULL,
   censoring_method = c("pooled_logit", "stabilized_logit", "Cox"),
   numerator_predictors = NULL,
+  censoring_time_spline_df = NULL,
   method = c("Cox", "logistic"),
   predictors = NULL,
   n_bootstrap = 200,
@@ -51,6 +52,11 @@ denominator censoring model.}
 
 \item{numerator_predictors}{Optional character vector of predictors for the
 numerator model when \code{censoring_method = "stabilized_logit"}.}
+
+\item{censoring_time_spline_df}{Degrees of freedom for the natural cubic
+spline of interval start time in pooled-logistic censoring models. Set to
+an integer of at least \code{2} to use a spline. The default \code{NULL} uses a
+linear time term. Ignored when \code{censoring_method = "Cox"}.}
 
 \item{method}{Outcome analysis method: \code{"Cox"} or \code{"logistic"}.}
 

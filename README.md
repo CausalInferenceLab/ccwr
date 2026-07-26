@@ -147,6 +147,12 @@ The full process is:
 8. Use `emul_estimate_bootstrap()` to resample the original subjects and repeat
    the complete workflow when bootstrap confidence intervals are needed.
 
+Pooled-logistic censoring models use a linear interval-start-time term by
+default. Set `time_spline_df = 3` in `estimate_censoring()`, or
+`censoring_time_spline_df = 3` in `emul_estimate_bootstrap()`, to use a natural
+cubic spline when the censoring data contain enough events to support the
+additional flexibility.
+
 ## What the package currently provides
 
 The package currently supports two-arm grace-period strategies for

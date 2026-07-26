@@ -5,6 +5,9 @@
 * Fixed Cox censoring probabilities to evaluate the cumulative baseline hazard
   as a step function at every interval start rather than assigning zero when an
   interval start did not exactly match a censoring-event time.
+* Added a configurable natural cubic spline for interval start time in
+  pooled-logistic censoring models (`time_spline_df`; `NULL` retains the
+  linear-time default).
 * Changed `emul_estimate_bootstrap()` to resample the original subjects and
   repeat cloning, artificial censoring, person-time expansion, censoring-model
   estimation, weighting, and outcome-model estimation in every replicate.

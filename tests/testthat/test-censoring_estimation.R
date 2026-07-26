@@ -50,6 +50,61 @@ test_that("estimate_censoring supports stabilized pooled-logit weights", {
   expect_true(all(result$Surgery$P_uncens_num <= 1))
 })
 
+test_that("pooled-logit censoring uses a configurable natural time spline", {
+  clones <- make_censoring_clones()
+  result <- suppressWarnings(
+    estimate_censoring(
+      clones,
+      predictors = "age",
+      method = "pooled_logit",
+      time_spline_df = 3
+    )
+  )
+  expected_fit <- suppressWarnings(
+    stats::glm(
+      censoring ~ splines::ns(Tstart, df = 3) + age,
+      data = clones$Control,
+      family = stats::binomial(link = "logit")
+    )
+  )
+  expected_probability <- .clamp_probability(
+    stats::predict(expected_fit, type = "response")
+  )
+
+  expect_equal(result$Control$p_cens_den, expected_probability)
+  expect_error(
+    estimate_censoring(
+      clones,
+      method = "pooled_logit",
+      time_spline_df = 1
+    ),
+    "at least 2"
+  )
+})
+
+test_that("pooled-logit censoring retains a linear time option", {
+  formula <- make_censoring_formula(
+    "censoring",
+    predictors = "age",
+    time_var = "Tstart",
+    time_spline_df = NULL
+  )
+
+  expect_equal(
+    attr(stats::terms(formula), "term.labels"),
+    c("Tstart", "age")
+  )
+})
+
+test_that("censoring formula supports an intercept-only model", {
+  formula <- make_censoring_formula(
+    "survival::Surv(Tstart, Tstop, censoring)"
+  )
+
+  expect_equal(attr(stats::terms(formula), "term.labels"), character())
+  expect_equal(attr(stats::terms(formula), "intercept"), 1L)
+})
+
 test_that("estimate_censoring supports Cox censoring models", {
   result <- suppressWarnings(
     estimate_censoring(

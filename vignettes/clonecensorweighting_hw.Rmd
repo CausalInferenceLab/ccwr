@@ -326,12 +326,17 @@ person-time data,
 
 $$
 \operatorname{logit}\Pr\!\big(C_k = 1 \mid \bar C_{k-1}=0,\; \bar L_k,\; \text{arm}\big)
-\;=\; \alpha_0 + \alpha_1 t_k + \beta^\top L_k,
+\;=\; f(t_k) + \beta^\top L_k,
 $$
 
-with $t_k$ the interval start time. IPCW then multiplies each clone by the inverse
-probability of "remaining uncensored so far," reallocating the contribution of
-censored clones to similar clones that remain. The **unstabilized** weight is
+with $t_k$ the interval start time. By default, $f(t_k)$ is linear. Setting
+`time_spline_df = 3` uses a natural cubic spline with 3 degrees of freedom,
+allowing the baseline log-odds of censoring to vary nonlinearly over follow-up.
+Spline flexibility should be supported by enough censoring events; sparse or
+structurally concentrated censoring can otherwise cause separation. IPCW then
+multiplies each clone by the inverse probability of "remaining uncensored so
+far," reallocating the contribution of censored clones to similar clones that
+remain. The **unstabilized** weight is
 
 $$
 W_i(k) \;=\;
@@ -365,7 +370,7 @@ difference; we therefore use the unstabilized `pooled_logit` weight.
 clones_estimated <- estimate_censoring(
   clones_final,
   predictors = c("age", "sex"),
-  method     = "pooled_logit"
+  method = "pooled_logit"
 )
 clones_weighted <- weight_cases(clones_estimated)
 ```

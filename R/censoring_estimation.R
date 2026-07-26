@@ -12,6 +12,10 @@
 #' @param id Column name for the subject identifier.
 #' @param time_start Column name for interval start time.
 #' @param time_stop Column name for interval stop time.
+#' @param time_spline_df Degrees of freedom for the natural cubic spline of
+#'   `time_start` in pooled-logistic censoring models. Set to an integer of at
+#'   least `2` to use a spline. The default `NULL` uses a linear time term.
+#'   Ignored when `method = "Cox"`.
 #' @param eps Small probability floor to avoid division by zero.
 #'
 #' @returns A named list of clone data frames with censoring probability
@@ -51,6 +55,7 @@ estimate_censoring <- function(
   id = "id",
   time_start = "Tstart",
   time_stop = "Tstop",
+  time_spline_df = NULL,
   eps = 1e-6
 ) {
   method <- match.arg(method)
@@ -67,6 +72,9 @@ estimate_censoring <- function(
   }
   .assert_clone_columns(clones, required_columns)
   .assert_probability_floor(eps)
+  if (method != "Cox") {
+    .assert_spline_df(time_spline_df, "time_spline_df")
+  }
 
   arms <- names(clones)
   res <- vector("list", length = length(arms))
@@ -88,7 +96,8 @@ estimate_censoring <- function(
   pooled_formula <- make_censoring_formula(
     backtick_name(censoring),
     predictors,
-    time_var = time_start
+    time_var = time_start,
+    time_spline_df = time_spline_df
   )
 
   for (arm in arms) {
@@ -162,7 +171,8 @@ estimate_censoring <- function(
         numerator_formula <- make_censoring_formula(
           backtick_name(censoring),
           numerator_data$predictors,
-          time_var = time_start
+          time_var = time_start,
+          time_spline_df = time_spline_df
         )
         fit_num <- stats::glm(
           numerator_formula,
@@ -201,15 +211,30 @@ estimate_censoring <- function(
 make_censoring_formula <- function(
   response,
   predictors = NULL,
-  time_var = NULL
+  time_var = NULL,
+  time_spline_df = NULL
 ) {
-  terms <- unique(c(
-    normalize_predictors(time_var),
-    normalize_predictors(predictors)
-  ))
-  terms <- backtick_name(terms)
+  time_var <- normalize_predictors(time_var)
+  predictors <- backtick_name(normalize_predictors(predictors))
 
-  formula <- stats::reformulate(terms, response = response)
+  time_term <- backtick_name(time_var)
+  if (length(time_var) > 0L && !is.null(time_spline_df)) {
+    .assert_spline_df(time_spline_df, "time_spline_df")
+    time_term <- paste0(
+      "splines::ns(",
+      backtick_name(time_var),
+      ", df = ",
+      as.integer(time_spline_df),
+      ")"
+    )
+  }
+  terms <- unique(c(time_term, predictors))
+
+  if (length(terms) == 0L) {
+    formula <- stats::as.formula(paste(response, "~ 1"))
+  } else {
+    formula <- stats::reformulate(terms, response = response)
+  }
   environment(formula) <- parent.frame()
   formula
 }
