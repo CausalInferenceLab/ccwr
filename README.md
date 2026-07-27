@@ -115,6 +115,21 @@ fit <- emul_estimate(
 )
 
 exp(stats::coef(fit))
+
+boot <- emul_estimate_bootstrap(
+  lungcancer,
+  arms = arms,
+  id = "id",
+  treatment = "surgery",
+  time_to_treatment = "timetosurgery",
+  grace_period = 182.62,
+  outcome = "death",
+  followup = "fup_obs",
+  censoring_predictors = c("age", "sex"),
+  predictors = c("age", "sex"),
+  n_bootstrap = 200,
+  seed = 1
+)
 ```
 
 The full process is:
@@ -129,16 +144,21 @@ The full process is:
 5. Estimate censoring probabilities with `estimate_censoring()`.
 6. Add inverse probability of censoring weights with `weight_cases()`.
 7. Estimate the emulated trial effect with `emul_estimate()`.
-8. Use `emul_estimate_bootstrap()` when bootstrap confidence intervals are
-   needed.
+8. Use `emul_estimate_bootstrap()` to resample the original subjects and repeat
+   the complete workflow when bootstrap confidence intervals are needed.
+
+Pooled-logistic censoring models use a linear interval-start-time term by
+default. Set `time_spline_df = 3` in `estimate_censoring()`, or
+`censoring_time_spline_df = 3` in `emul_estimate_bootstrap()`, to use a natural
+cubic spline when the censoring data contain enough events to support the
+additional flexibility.
 
 ## What the package currently provides
 
-The package is still an early, lightweight foundation for future work. Right
-now it includes:
+The package currently supports two-arm grace-period strategies for
+subject-level observational time-to-event data. It includes:
 
 - `read_trial_data()` to read trial-style CSV data into a tibble
-- `clone_censor_weighting()` to create a starter cloned dataset across regimes
 - `make_surv_response()` to build a `survival::Surv()` response object
 - `clone_arms()` to duplicate observations across treatment strategies
 - `create_policy_A()` and `create_censoring_logics_A()` to generate example
@@ -147,8 +167,9 @@ now it includes:
 - `create_final_data()` to create long-form interval data for censoring models
 - `estimate_censoring()` and `weight_cases()` to estimate censoring
   probabilities and add IPC weights
-- `emul_estimate()` and `emul_estimate_bootstrap()` to estimate treatment
-  effects and bootstrap confidence intervals
+- `emul_estimate()` to estimate treatment effects
+- `emul_estimate_bootstrap()` to obtain subject-level bootstrap confidence
+  intervals by repeating cloning, censoring, weighting, and outcome estimation
 
 ## Working together on this repository
 

@@ -25,13 +25,14 @@ A data frame with 200 rows and 12 columns:
 }
 }
 \source{
-\url{https://doi.org/10.1093/ije/dyaa057}
+\doi{10.1093/ije/dyaa057}
 }
 \usage{
 lungcancer
 }
 \description{
-The dataset is from supplmentary files of \href{https://doi.org/10.1093/ije/dyaa057}{Maringe et al. (2020)}.
+The dataset is from the supplementary files of Maringe et al. (2020),
+\doi{10.1093/ije/dyaa057}.
 The dataset is a set of 200 simulated lung cancer patients.
 These patients are followed up for a year following their cancer diagnosis:
 106 of them received surgery within six months of their diagnosis and

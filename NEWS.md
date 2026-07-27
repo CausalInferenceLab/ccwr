@@ -1,5 +1,19 @@
 # clonecensorweighting 0.0.0.9000
 
+## Correctness
+
+* Fixed Cox censoring probabilities to evaluate the cumulative baseline hazard
+  as a step function at every interval start rather than assigning zero when an
+  interval start did not exactly match a censoring-event time.
+* Added a configurable natural cubic spline for interval start time in
+  pooled-logistic censoring models (`time_spline_df`; `NULL` retains the
+  linear-time default).
+* Changed `emul_estimate_bootstrap()` to resample the original subjects and
+  repeat cloning, artificial censoring, person-time expansion, censoring-model
+  estimation, weighting, and outcome-model estimation in every replicate.
+* Removed the development scaffold `clone_censor_weighting()` from the public
+  API.
+
 ## Refactoring
 
 * Split the final censoring-probability training data workflow into focused
@@ -20,8 +34,8 @@
   inverse probability of censoring weights.
 * Added `emul_estimate()` as the public interface for Cox, logistic, and
   Kaplan-Meier analyses of the emulated trial.
-* Added `emul_estimate_bootstrap()` as the public interface for bootstrap
-  confidence intervals for two-arm Cox and logistic analyses.
+* Added `emul_estimate_bootstrap()` as the public interface for full-workflow
+  bootstrap confidence intervals for two-arm Cox and logistic analyses.
 * Kept formula construction, cumulative uncensoring, baseline predictor
   extraction, predictor/weight normalization, arm binding, and coefficient
   extraction as internal helpers.

@@ -4,16 +4,24 @@
 \name{clonecensorweighting-package}
 \alias{clonecensorweighting}
 \alias{clonecensorweighting-package}
-\title{clonecensorweighting: Infrastructure for Clone-Censor-Weighting Analyses}
+\title{clonecensorweighting: Clone-Censor-Weight Methods for Target Trial Emulation}
 \description{
-Provides a starter package for clone-censor-weighting workflows used in target trial emulation. The package currently includes data ingestion helpers, a minimal data cloning routine, and utilities for constructing survival responses.
+Implements clone-censor-weight analyses for emulating target trials with grace-period treatment strategies using observational time-to-event data. Provides tools to clone subjects across strategies, apply strategy-specific artificial censoring, estimate inverse probability of censoring weights using pooled logistic or Cox models, fit weighted outcome models, and obtain subject-level bootstrap confidence intervals by repeating the complete analysis. The methods are described by Maringe et al. (2020) \doi{10.1093/ije/dyaa057} and Gaber et al. (2024) \doi{10.1002/cam4.70461}.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/CausalInferenceLab/clonecensorweighting}
+  \item Report bugs at \url{https://github.com/CausalInferenceLab/clonecensorweighting/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Sang Ho Park \email{shstat1729@gmail.com}
 
 Authors:
 \itemize{
-  \item Sang Ho Park \email{shstat1729@gmail.com}
+  \item Youngrok Lee
 }
 
 }

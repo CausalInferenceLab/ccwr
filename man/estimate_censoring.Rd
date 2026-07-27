@@ -13,6 +13,7 @@ estimate_censoring(
   id = "id",
   time_start = "Tstart",
   time_stop = "Tstop",
+  time_spline_df = NULL,
   eps = 1e-06
 )
 }
@@ -36,6 +37,11 @@ are used.}
 \item{time_start}{Column name for interval start time.}
 
 \item{time_stop}{Column name for interval stop time.}
+
+\item{time_spline_df}{Degrees of freedom for the natural cubic spline of
+\code{time_start} in pooled-logistic censoring models. Set to an integer of at
+least \code{2} to use a spline. The default \code{NULL} uses a linear time term.
+Ignored when \code{method = "Cox"}.}
 
 \item{eps}{Small probability floor to avoid division by zero.}
 }

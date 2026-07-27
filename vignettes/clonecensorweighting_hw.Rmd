@@ -326,12 +326,17 @@ person-time data,
 
 $$
 \operatorname{logit}\Pr\!\big(C_k = 1 \mid \bar C_{k-1}=0,\; \bar L_k,\; \text{arm}\big)
-\;=\; \alpha_0 + \alpha_1 t_k + \beta^\top L_k,
+\;=\; f(t_k) + \beta^\top L_k,
 $$
 
-with $t_k$ the interval start time. IPCW then multiplies each clone by the inverse
-probability of "remaining uncensored so far," reallocating the contribution of
-censored clones to similar clones that remain. The **unstabilized** weight is
+with $t_k$ the interval start time. By default, $f(t_k)$ is linear. Setting
+`time_spline_df = 3` uses a natural cubic spline with 3 degrees of freedom,
+allowing the baseline log-odds of censoring to vary nonlinearly over follow-up.
+Spline flexibility should be supported by enough censoring events; sparse or
+structurally concentrated censoring can otherwise cause separation. IPCW then
+multiplies each clone by the inverse probability of "remaining uncensored so
+far," reallocating the contribution of censored clones to similar clones that
+remain. The **unstabilized** weight is
 
 $$
 W_i(k) \;=\;
@@ -365,7 +370,7 @@ difference; we therefore use the unstabilized `pooled_logit` weight.
 clones_estimated <- estimate_censoring(
   clones_final,
   predictors = c("age", "sex"),
-  method     = "pooled_logit"
+  method = "pooled_logit"
 )
 clones_weighted <- weight_cases(clones_estimated)
 ```
@@ -408,8 +413,10 @@ summary(cox_fit)$conf.int
 
 Because the weights make the effective sample differ from the raw data, the
 model-based standard error is unreliable. `emul_estimate_bootstrap()` resamples
-patients (the clustering unit) $B$ times, refits the model to each resample, and
-takes the percentile interval of the resulting hazard ratios,
+patients from the original subject-level data $B$ times. Within every resample,
+it repeats cloning, artificial censoring, person-time expansion, censoring-model
+estimation, weighting, and outcome-model estimation before taking the
+percentile interval of the resulting hazard ratios,
 
 $$
 \big(\widehat{\mathrm{HR}}^{*}_{(\alpha/2)},\ \widehat{\mathrm{HR}}^{*}_{(1-\alpha/2)}\big),
@@ -420,14 +427,25 @@ for speed.
 
 ```{r bootstrap}
 boot <- emul_estimate_bootstrap(
-  clones_weighted,
-  method      = "Cox",
-  weights     = "weight_Cox",
-  predictors  = c("age", "sex"),
-  n_bootstrap = 200,
-  seed        = 1
+  lungcancer,
+  arms                   = arms,
+  id                     = "id",
+  treatment              = "surgery",
+  time_to_treatment      = "timetosurgery",
+  grace_period           = grace_period,
+  outcome                = "death",
+  followup               = "fup_obs",
+  censoring_predictors   = c("age", "sex"),
+  method                 = "Cox",
+  predictors             = c("age", "sex"),
+  n_bootstrap            = 10,
+  seed                   = 1
 )
-c(HR_lower = unname(boot$ci_lower), HR_upper = unname(boot$ci_upper))
+c(
+  HR = boot$estimate,
+  HR_lower = boot$ci_lower,
+  HR_upper = boot$ci_upper
+)
 ```
 
 For a visual summary, `method = "KM"` returns weighted Kaplan-Meier curves for
