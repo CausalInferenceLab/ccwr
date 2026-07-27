@@ -95,22 +95,37 @@
 <div class="section level2">
 <h2 id="why-clone-censor-weighting">Why clone-censor-weighting?<a class="anchor" aria-label="anchor" href="#why-clone-censor-weighting"></a>
 </h2>
-<p>Suppose we want to know whether surgery improves survival in lung cancer patients. Comparing patients who had surgery against those who did not, using a naive analysis, can be badly biased. One reason is <em>immortal time bias</em>: to appear in the “surgery” group, a patient has to survive long enough to actually receive surgery. That guaranteed survival time gets unfairly credited to the surgery group.</p>
-<p>Clone-censor-weighting (CCW) is a technique used in target trial emulation to address this. The idea has three parts, which also give the method its name:</p>
+<p>Suppose we want to know whether surgery improves survival in lung
+cancer patients. Comparing patients who had surgery against those who
+did not, using a naive analysis, can be badly biased. One reason is
+<em>immortal time bias</em>: to appear in the “surgery” group, a patient
+has to survive long enough to actually receive surgery. That guaranteed
+survival time gets unfairly credited to the surgery group.</p>
+<p>Clone-censor-weighting (CCW) is a technique used in target trial
+emulation to address this. The idea has three parts, which also give the
+method its name:</p>
 <ul>
 <li>
-<strong>Clone</strong>: each patient is copied into every treatment strategy under comparison, so that at the start of follow-up everyone is compatible with every strategy.</li>
+<strong>Clone</strong>: each patient is copied into every treatment
+strategy under comparison, so that at the start of follow-up everyone is
+compatible with every strategy.</li>
 <li>
-<strong>Censor</strong>: a clone is censored at the moment the patient’s observed data stops being consistent with the strategy that clone was assigned to.</li>
+<strong>Censor</strong>: a clone is censored at the moment the
+patient’s observed data stops being consistent with the strategy that
+clone was assigned to.</li>
 <li>
-<strong>Weight</strong>: inverse-probability-of-censoring weights correct for the artificial censoring introduced in the previous step.</li>
+<strong>Weight</strong>: inverse-probability-of-censoring weights
+correct for the artificial censoring introduced in the previous
+step.</li>
 </ul>
-<p>This vignette walks through the pipeline end to end, using a lung cancer dataset that ships with the package.</p>
+<p>This vignette walks through the pipeline end to end, using a lung
+cancer dataset that ships with the package.</p>
 </div>
 <div class="section level2">
 <h2 id="the-example-data">The example data<a class="anchor" aria-label="anchor" href="#the-example-data"></a>
 </h2>
-<p>The package includes <code>lungcancer</code>, a dataset of 200 lung cancer patients.</p>
+<p>The package includes <code>lungcancer</code>, a dataset of 200 lung
+cancer patients.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">lungcancer</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lungcancer</span><span class="op">)</span></span>
@@ -133,38 +148,58 @@
 <li>
 <code>id</code>: patient identifier</li>
 <li>
-<code>surgery</code>: whether the patient received surgery (<code>1</code>) or not (<code>0</code>)</li>
+<code>surgery</code>: whether the patient received surgery
+(<code>1</code>) or not (<code>0</code>)</li>
 <li>
-<code>timetosurgery</code>: time from baseline to surgery (<code>NA</code> if never operated on)</li>
+<code>timetosurgery</code>: time from baseline to surgery
+(<code>NA</code> if never operated on)</li>
 <li>
-<code>death</code>: whether the patient died (<code>1</code>) or not (<code>0</code>) — the outcome event</li>
+<code>death</code>: whether the patient died (<code>1</code>) or not
+(<code>0</code>) — the outcome event</li>
 <li>
 <code>fup_obs</code>: observed follow-up time</li>
 </ul>
-<p>The remaining columns (<code>sex</code>, <code>charlson</code>, <code>perf</code>, <code>stage</code>, <code>emergency</code>, <code>age</code>, <code>deprivation</code>) describe patient characteristics that can be used as covariates when estimating censoring weights.</p>
-<p>We compare two strategies, and give them names we will reuse throughout:</p>
+<p>The remaining columns (<code>sex</code>, <code>charlson</code>,
+<code>perf</code>, <code>stage</code>, <code>emergency</code>,
+<code>age</code>, <code>deprivation</code>) describe patient
+characteristics that can be used as covariates when estimating censoring
+weights.</p>
+<p>We compare two strategies, and give them names we will reuse
+throughout:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">arms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Surgery"</span><span class="op">)</span></span></code></pre></div>
-<p>The <strong>grace period</strong> is central to this analysis. It is the window during which a patient is still considered compatible with the “surgery” strategy. A patient who has surgery within the grace period is consistent with the treated strategy; one who does not is consistent with the control strategy. Here we use a grace period of 90 days.</p>
+<p>The <strong>grace period</strong> is central to this analysis. It is
+the window during which a patient is still considered compatible with
+the “surgery” strategy. A patient who has surgery within the grace
+period is consistent with the treated strategy; one who does not is
+consistent with the control strategy. Here we use a grace period of 90
+days.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">grace_period</span> <span class="op">&lt;-</span> <span class="fl">90</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="step-1-clone-the-data-across-arms">Step 1: Clone the data across arms<a class="anchor" aria-label="anchor" href="#step-1-clone-the-data-across-arms"></a>
 </h2>
-<p><code><a href="../reference/clone_arms.html">clone_arms()</a></code> copies the full dataset once per strategy and returns a list with one data frame per arm.</p>
+<p><code><a href="../reference/clone_arms.html">clone_arms()</a></code> copies the full dataset once per strategy
+and returns a list with one data frame per arm.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clones</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clone_arms.html">clone_arms</a></span><span class="op">(</span><span class="va">lungcancer</span>, <span class="va">arms</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">clones</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Control" "Surgery"</span></span></code></pre></div>
-<p>At this point the two data frames are identical copies of the original data. The strategy-specific logic is applied in the next steps.</p>
+<p>At this point the two data frames are identical copies of the
+original data. The strategy-specific logic is applied in the next
+steps.</p>
 </div>
 <div class="section level2">
 <h2 id="step-2-build-the-policy-and-censoring-logic">Step 2: Build the policy and censoring logic<a class="anchor" aria-label="anchor" href="#step-2-build-the-policy-and-censoring-logic"></a>
 </h2>
-<p>Two helper functions describe how each arm’s emulated outcome, follow-up, and censoring should be derived. They do not touch the data yet; they return the rules (as expressions) that will be applied in Step 3.</p>
-<p><code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> produces the emulated outcome and follow-up under the grace period policy.</p>
+<p>Two helper functions describe how each arm’s emulated outcome,
+follow-up, and censoring should be derived. They do not touch the data
+yet; they return the rules (as expressions) that will be applied in Step
+3.</p>
+<p><code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> produces the emulated outcome and
+follow-up under the grace period policy.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">policy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_policy_A.html">create_policy_A</a></span><span class="op">(</span></span>
 <span>  arms              <span class="op">=</span> <span class="va">arms</span>,</span>
@@ -174,7 +209,9 @@
 <span>  outcome           <span class="op">=</span> <span class="st">"death"</span>,</span>
 <span>  followup          <span class="op">=</span> <span class="st">"fup_obs"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code> produces the censoring indicator and the time at which that indicator can first be determined.</p>
+<p><code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code> produces the censoring
+indicator and the time at which that indicator can first be
+determined.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">censoring</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A</a></span><span class="op">(</span></span>
 <span>  arms              <span class="op">=</span> <span class="va">arms</span>,</span>
@@ -183,12 +220,17 @@
 <span>  grace_period      <span class="op">=</span> <span class="va">grace_period</span>,</span>
 <span>  followup          <span class="op">=</span> <span class="st">"fup_obs"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Each of these returns a nested list, one entry per arm. The policy rules create the variables <code>.outcome</code> and <code>.fup</code>; the censoring rules create <code>.censoring</code> and <code>.fup_uncensored</code>.</p>
+<p>Each of these returns a nested list, one entry per arm. The policy
+rules create the variables <code>.outcome</code> and <code>.fup</code>;
+the censoring rules create <code>.censoring</code> and
+<code>.fup_uncensored</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="step-3-apply-the-logic-to-the-clones">Step 3: Apply the logic to the clones<a class="anchor" aria-label="anchor" href="#step-3-apply-the-logic-to-the-clones"></a>
 </h2>
-<p><code><a href="../reference/apply_logics.html">apply_logics()</a></code> evaluates the rules against each arm’s data. We combine the policy and censoring rules for each arm into a single set of new variables.</p>
+<p><code><a href="../reference/apply_logics.html">apply_logics()</a></code> evaluates the rules against each arm’s
+data. We combine the policy and censoring rules for each arm into a
+single set of new variables.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">logics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  Control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">policy</span><span class="op">$</span><span class="va">Control</span>, <span class="va">censoring</span><span class="op">$</span><span class="va">Control</span><span class="op">)</span>,</span>
@@ -209,12 +251,18 @@
 <span><span class="co">#&gt;  [5] "sex"             "charlson"        "perf"            "stage"          </span></span>
 <span><span class="co">#&gt;  [9] "emergency"       "fup_obs"         "age"             "deprivation"    </span></span>
 <span><span class="co">#&gt; [13] ".outcome"        ".fup"            ".censoring"      ".fup_uncensored"</span></span></code></pre></div>
-<p>Each arm’s data frame now carries the emulated variables (<code>.outcome</code>, <code>.fup</code>, <code>.censoring</code>, <code>.fup_uncensored</code>) alongside the original columns.</p>
+<p>Each arm’s data frame now carries the emulated variables
+(<code>.outcome</code>, <code>.fup</code>, <code>.censoring</code>,
+<code>.fup_uncensored</code>) alongside the original columns.</p>
 </div>
 <div class="section level2">
 <h2 id="step-4-assemble-the-final-long-form-data">Step 4: Assemble the final long-form data<a class="anchor" aria-label="anchor" href="#step-4-assemble-the-final-long-form-data"></a>
 </h2>
-<p><code><a href="../reference/create_final_data.html">create_final_data()</a></code> turns each patient into a sequence of time intervals (a counting-process, or “long”, format). Internally it finds every event time, splits each patient’s follow-up at those times, and combines the outcome and censoring information into one table per arm.</p>
+<p><code><a href="../reference/create_final_data.html">create_final_data()</a></code> turns each patient into a sequence
+of time intervals (a counting-process, or “long”, format). Internally it
+finds every event time, splits each patient’s follow-up at those times,
+and combines the outcome and censoring information into one table per
+arm.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">final</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_final_data.html">create_final_data</a></span><span class="op">(</span></span>
 <span>  clones          <span class="op">=</span> <span class="va">emulated</span>,</span>
@@ -246,7 +294,10 @@
 <span><span class="co">#&gt; 4    3</span></span>
 <span><span class="co">#&gt; 5    4</span></span>
 <span><span class="co">#&gt; 6    5</span></span></code></pre></div>
-<p>Each row is now one patient-interval, bounded by <code>Tstart</code> and <code>Tstop</code>. Because a single patient contributes several intervals, each arm has many more rows than the original 200 patients:</p>
+<p>Each row is now one patient-interval, bounded by <code>Tstart</code>
+and <code>Tstop</code>. Because a single patient contributes several
+intervals, each arm has many more rows than the original 200
+patients:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">final</span>, <span class="va">dim</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $Control</span></span>
@@ -254,23 +305,33 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $Surgery</span></span>
 <span><span class="co">#&gt; [1] 11532    20</span></span></code></pre></div>
-<p>This long-form data is the input for the final steps of a CCW analysis: estimating inverse-probability-of-censoring weights over time and fitting a weighted survival model to compare the two strategies.</p>
+<p>This long-form data is the input for the final steps of a CCW
+analysis: estimating inverse-probability-of-censoring weights over time
+and fitting a weighted survival model to compare the two strategies.</p>
 </div>
 <div class="section level2">
 <h2 id="reading-your-own-data">Reading your own data<a class="anchor" aria-label="anchor" href="#reading-your-own-data"></a>
 </h2>
-<p>The example above uses the bundled <code>lungcancer</code> data. To run the same workflow on your own data, it needs, at a minimum:</p>
+<p>The example above uses the bundled <code>lungcancer</code> data. To
+run the same workflow on your own data, it needs, at a minimum:</p>
 <ul>
 <li>an <strong>identifier</strong> column for each patient</li>
-<li>a binary <strong>treatment</strong> column, coded <code>0</code> / <code>1</code>
+<li>a binary <strong>treatment</strong> column, coded <code>0</code> /
+<code>1</code>
 </li>
-<li>a <strong>time-to-treatment</strong> column (numeric, <code>NA</code> for the untreated)</li>
-<li>a binary <strong>outcome</strong> column, coded <code>0</code> / <code>1</code>
+<li>a <strong>time-to-treatment</strong> column (numeric,
+<code>NA</code> for the untreated)</li>
+<li>a binary <strong>outcome</strong> column, coded <code>0</code> /
+<code>1</code>
 </li>
 <li>a numeric <strong>follow-up time</strong> column</li>
 </ul>
-<p>The column <em>names</em> are up to you; you pass them to the arguments of the policy and censoring helpers, as we did above. Any additional columns are carried along and can serve as covariates.</p>
-<p><code><a href="../reference/read_trial_data.html">read_trial_data()</a></code> is a small convenience wrapper for reading such data from a CSV file into a tibble. It does not impose any particular column structure; it simply reads the file:</p>
+<p>The column <em>names</em> are up to you; you pass them to the
+arguments of the policy and censoring helpers, as we did above. Any
+additional columns are carried along and can serve as covariates.</p>
+<p><code><a href="../reference/read_trial_data.html">read_trial_data()</a></code> is a small convenience wrapper for
+reading such data from a CSV file into a tibble. It does not impose any
+particular column structure; it simply reads the file:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">my_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_trial_data.html">read_trial_data</a></span><span class="op">(</span><span class="st">"path/to/your-data.csv"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -279,13 +340,20 @@
 </h2>
 <p>In this vignette we:</p>
 <ul>
-<li>motivated clone-censor-weighting with a lung cancer surgery question and the problem of immortal time bias,</li>
-<li>cloned the data across a control and a surgery arm with <code><a href="../reference/clone_arms.html">clone_arms()</a></code>,</li>
-<li>described the grace-period policy and censoring rules with <code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> and <code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code>,</li>
+<li>motivated clone-censor-weighting with a lung cancer surgery question
+and the problem of immortal time bias,</li>
+<li>cloned the data across a control and a surgery arm with
+<code><a href="../reference/clone_arms.html">clone_arms()</a></code>,</li>
+<li>described the grace-period policy and censoring rules with
+<code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> and
+<code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code>,</li>
 <li>applied those rules with <code><a href="../reference/apply_logics.html">apply_logics()</a></code>,</li>
-<li>and assembled a long-form analysis dataset with <code><a href="../reference/create_final_data.html">create_final_data()</a></code>.</li>
+<li>and assembled a long-form analysis dataset with
+<code><a href="../reference/create_final_data.html">create_final_data()</a></code>.</li>
 </ul>
-<p>The remaining steps of a full CCW analysis — estimating censoring weights and fitting a weighted outcome model — build directly on this long-form dataset.</p>
+<p>The remaining steps of a full CCW analysis — estimating censoring
+weights and fitting a weighted outcome model — build directly on this
+long-form dataset.</p>
 </div>
   </div>
 
@@ -304,7 +372,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>

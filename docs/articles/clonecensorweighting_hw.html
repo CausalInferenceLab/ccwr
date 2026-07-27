@@ -80,8 +80,15 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>An Overview of the clonecensorweighting Package for R</h1>
-                        <h4 data-toc-skip class="author"><div class="line-block">First Author<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>*</mo></msup><annotation encoding="application/x-tex">^{*}</annotation></semantics></math> Second Author<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>†</mo></msup><annotation encoding="application/x-tex">^{\dagger}</annotation></semantics></math><br><br><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>*</mo></msup><annotation encoding="application/x-tex">^{*}</annotation></semantics></math>Affiliation One <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>†</mo></msup><annotation encoding="application/x-tex">^{\dagger}</annotation></semantics></math>Affiliation Two</div></h4>
+      <h1 data-toc-skip>An Overview of the clonecensorweighting Package
+for R</h1>
+                        <h4 data-toc-skip class="author"><div class="line-block">First
+Author<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>*</mo></msup><annotation encoding="application/x-tex">^{*}</annotation></semantics></math>
+Second
+Author<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>†</mo></msup><annotation encoding="application/x-tex">^{\dagger}</annotation></semantics></math><br><br><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>*</mo></msup><annotation encoding="application/x-tex">^{*}</annotation></semantics></math>Affiliation
+One
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi></mi><mo>†</mo></msup><annotation encoding="application/x-tex">^{\dagger}</annotation></semantics></math>Affiliation
+Two</div></h4>
             
             <h4 data-toc-skip class="date">2026-07-27</h4>
       
@@ -103,20 +110,53 @@ p.caption { text-align: center; }
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p><code>clonecensorweighting</code> implements the <em>clone-censor-weight</em> (CCW) procedure for emulating a target trial from observational time-to-event data.</p>
-<p>Suppose we want to know whether surgery improves survival in lung cancer patients. Naively comparing those who had surgery against those who did not can be badly misleading. A central culprit is <em>immortal time bias</em>: to be counted in the “surgery” group, a patient must first survive long enough to receive surgery, and that guaranteed survival time is then credited to the surgery group as though it were a benefit of the operation.</p>
-<p>CCW is the standard target-trial-emulation remedy for this bias, and its name traces the three steps it takes:</p>
+<p><code>clonecensorweighting</code> implements the
+<em>clone-censor-weight</em> (CCW) procedure for emulating a target
+trial from observational time-to-event data.</p>
+<p>Suppose we want to know whether surgery improves survival in lung
+cancer patients. Naively comparing those who had surgery against those
+who did not can be badly misleading. A central culprit is <em>immortal
+time bias</em>: to be counted in the “surgery” group, a patient must
+first survive long enough to receive surgery, and that guaranteed
+survival time is then credited to the surgery group as though it were a
+benefit of the operation.</p>
+<p>CCW is the standard target-trial-emulation remedy for this bias, and
+its name traces the three steps it takes:</p>
 <ul>
 <li>
-<strong>Clone</strong> – each patient is duplicated into every treatment strategy being compared, so that at the start of follow-up every clone is compatible with the strategy it is assigned to.</li>
+<strong>Clone</strong> – each patient is duplicated into every
+treatment strategy being compared, so that at the start of follow-up
+every clone is compatible with the strategy it is assigned to.</li>
 <li>
-<strong>Censor</strong> – a clone is censored the moment the patient’s observed history stops being consistent with the strategy that clone represents.</li>
+<strong>Censor</strong> – a clone is censored the moment the
+patient’s observed history stops being consistent with the strategy that
+clone represents.</li>
 <li>
-<strong>Weight</strong> – inverse-probability-of-censoring weights undo the selection bias introduced by that artificial censoring.</li>
+<strong>Weight</strong> – inverse-probability-of-censoring weights
+undo the selection bias introduced by that artificial censoring.</li>
 </ul>
-<p>The package exposes these steps as a small set of composable functions: they clone a subject-level dataset across strategies, apply the artificial censoring each strategy implies, expand the result into the person-time format that an inverse-probability-of-censoring weighted (IPCW) analysis requires, and fit the weighted per-protocol effect.</p>
-<p>The rest of this document is organised as follows. Section 2 reviews target trial emulation. Section 3 works through the method on a real dataset, introducing notation where it is needed and presenting each of the three ideas – cloning, artificial censoring, and IPC weighting – with its rationale and immediately in code, and then estimating the weighted per-protocol effect. Readers who instead want a step-by-step account of <em>building</em> the analysis dataset may prefer the companion “Getting started” vignette.</p>
-<p>We assume familiarity with the basic ideas of target trial emulation and inverse-probability weighting. The target-trial framework we emulate is set out by Hernán and Robins [2016] and Hernán, Wang and Leaf [2022]; the use of marginal structural models and IPC weighting to adjust for time-varying selection goes back to Hernán, Brumback and Robins [2000]. Maringe et al. [2020] discuss trial emulation specifically as a remedy for immortal-time bias, and Gaber et al. [2024] give a practical account of implementing clone-censor-weight with stabilized IPCW, which the implementation here follows.</p>
+<p>The package exposes these steps as a small set of composable
+functions: they clone a subject-level dataset across strategies, apply
+the artificial censoring each strategy implies, expand the result into
+the person-time format that an inverse-probability-of-censoring weighted
+(IPCW) analysis requires, and fit the weighted per-protocol effect.</p>
+<p>The rest of this document is organised as follows. Section 2 reviews
+target trial emulation. Section 3 works through the method on a real
+dataset, introducing notation where it is needed and presenting each of
+the three ideas – cloning, artificial censoring, and IPC weighting –
+with its rationale and immediately in code, and then estimating the
+weighted per-protocol effect. Readers who instead want a step-by-step
+account of <em>building</em> the analysis dataset may prefer the
+companion “Getting started” vignette.</p>
+<p>We assume familiarity with the basic ideas of target trial emulation
+and inverse-probability weighting. The target-trial framework we emulate
+is set out by Hernán and Robins [2016] and Hernán, Wang and Leaf [2022];
+the use of marginal structural models and IPC weighting to adjust for
+time-varying selection goes back to Hernán, Brumback and Robins [2000].
+Maringe et al. [2020] discuss trial emulation specifically as a remedy
+for immortal-time bias, and Gaber et al. [2024] give a practical account
+of implementing clone-censor-weight with stabilized IPCW, which the
+implementation here follows.</p>
 </div>
 <div class="section level2">
 <h2 id="target-trial-emulation">Target trial emulation<a class="anchor" aria-label="anchor" href="#target-trial-emulation"></a>
@@ -124,11 +164,26 @@ p.caption { text-align: center; }
 <div class="section level3">
 <h3 id="the-problem-it-solves">The problem it solves<a class="anchor" aria-label="anchor" href="#the-problem-it-solves"></a>
 </h3>
-<p>A randomized controlled trial (RCT) can directly compare “following strategy A to the end” versus “following strategy B to the end.” The difficulty with observational data is that no such assignment exists. People are not split into A/B at baseline; over time they begin, switch, or stop treatments according to their evolving health.</p>
-<p>The hardest case is when the strategy is defined by something that happens in the future, not at baseline. Consider the strategy “receive surgery within 6 months of diagnosis.” At diagnosis (baseline) we cannot know whether a person will go on to have surgery within 6 months. If we split people at baseline into “surgery” versus “no surgery,” anyone who dies before surgery is automatically classified into the no-surgery arm, producing <em>immortal time bias</em>.</p>
-<p>Hernán and Robins [2016] proposed a simple remedy: specify the RCT you would ideally run (the <em>target trial</em>), then emulate that trial using observational data. A target trial is specified through seven components. Table 1 maps those components onto this vignette’s running example (surgery within 6 months of diagnosis).</p>
+<p>A randomized controlled trial (RCT) can directly compare “following
+strategy A to the end” versus “following strategy B to the end.” The
+difficulty with observational data is that no such assignment exists.
+People are not split into A/B at baseline; over time they begin, switch,
+or stop treatments according to their evolving health.</p>
+<p>The hardest case is when the strategy is defined by something that
+happens in the future, not at baseline. Consider the strategy “receive
+surgery within 6 months of diagnosis.” At diagnosis (baseline) we cannot
+know whether a person will go on to have surgery within 6 months. If we
+split people at baseline into “surgery” versus “no surgery,” anyone who
+dies before surgery is automatically classified into the no-surgery arm,
+producing <em>immortal time bias</em>.</p>
+<p>Hernán and Robins [2016] proposed a simple remedy: specify the RCT
+you would ideally run (the <em>target trial</em>), then emulate that
+trial using observational data. A target trial is specified through
+seven components. Table 1 maps those components onto this vignette’s
+running example (surgery within 6 months of diagnosis).</p>
 <table class="table">
-<caption>Target trial components mapped onto the running example.</caption>
+<caption>Target trial components mapped onto the running
+example.</caption>
 <colgroup>
 <col width="50%">
 <col width="50%">
@@ -148,7 +203,9 @@ p.caption { text-align: center; }
 </tr>
 <tr class="odd">
 <td>3. Assignment</td>
-<td>No assignment in observational data <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> replaced by cloning</td>
+<td>No assignment in observational data
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>
+replaced by cloning</td>
 </tr>
 <tr class="even">
 <td>4. Follow-up</td>
@@ -160,7 +217,8 @@ p.caption { text-align: center; }
 </tr>
 <tr class="even">
 <td>6. Causal contrast</td>
-<td>Per-protocol effect (effect of following the strategy to the end)</td>
+<td>Per-protocol effect (effect of following the strategy to the
+end)</td>
 </tr>
 <tr class="odd">
 <td>7. Analysis</td>
@@ -172,9 +230,13 @@ p.caption { text-align: center; }
 <div class="section level3">
 <h3 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h3>
-<p>The <code>clonecensorweighting</code> package is concerned with the causal analysis of time-to-event outcomes. The bundled <code>lungcancer</code> dataset contains 200 simulated lung cancer patients followed for up to one year after diagnosis; 106 received surgery within six months and 48 died during follow-up.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">data</span>(lungcancer)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">head</span>(lungcancer)</span></code></pre></div>
+<p>The <code>clonecensorweighting</code> package is concerned with the
+causal analysis of time-to-event outcomes. The bundled
+<code>lungcancer</code> dataset contains 200 simulated lung cancer
+patients followed for up to one year after diagnosis; 106 received
+surgery within six months and 48 died during follow-up.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">data</span>(lungcancer)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">head</span>(lungcancer)</span></code></pre></div>
 <pre><code>     id surgery timetosurgery death sex charlson perf stage emergency fup_obs
 1 P5958       0            NA     0   2        1    2     2         1  365.24
 2 P3075       0            NA     0   2        1    0     2         0  365.24
@@ -189,92 +251,136 @@ p.caption { text-align: center; }
 4 78.34634        0.12
 5 83.63860        0.40
 6 82.26147        0.03</code></pre>
-<p>The variables used below are the patient identifier <code>id</code>, the observed treatment <code>surgery</code> (<code>1</code>/<code>0</code>), the time to surgery <code>timetosurgery</code> (<code>NA</code> if never operated on), the outcome <code>death</code> (<code>1</code>/<code>0</code>), the observed follow-up <code>fup_obs</code>, and the covariates <code>age</code> and <code>sex</code>.</p>
+<p>The variables used below are the patient identifier <code>id</code>,
+the observed treatment <code>surgery</code>
+(<code>1</code>/<code>0</code>), the time to surgery
+<code>timetosurgery</code> (<code>NA</code> if never operated on), the
+outcome <code>death</code> (<code>1</code>/<code>0</code>), the observed
+follow-up <code>fup_obs</code>, and the covariates <code>age</code> and
+<code>sex</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="reading-your-own-data">Reading your own data<a class="anchor" aria-label="anchor" href="#reading-your-own-data"></a>
 </h3>
-<p>The example uses the bundled <code>lungcancer</code> data, but the same workflow runs on any subject-level dataset that provides, at a minimum:</p>
+<p>The example uses the bundled <code>lungcancer</code> data, but the
+same workflow runs on any subject-level dataset that provides, at a
+minimum:</p>
 <ul>
 <li>an identifier column for each patient;</li>
-<li>a binary treatment column, coded <code>0</code> / <code>1</code>;</li>
-<li>a time-to-treatment column (numeric, <code>NA</code> for the untreated);</li>
+<li>a binary treatment column, coded <code>0</code> /
+<code>1</code>;</li>
+<li>a time-to-treatment column (numeric, <code>NA</code> for the
+untreated);</li>
 <li>a binary outcome column, coded <code>0</code> / <code>1</code>;</li>
 <li>a numeric follow-up-time column.</li>
 </ul>
-<p>The column <em>names</em> are up to you: you pass them to the relevant function arguments (the treatment, outcome and follow-up names to the policy and censoring helpers; the identifier to <code><a href="../reference/create_final_data.html">create_final_data()</a></code>; any covariates to <code><a href="../reference/estimate_censoring.html">estimate_censoring()</a></code>), as we do in Section 3. Any additional columns are carried along and can serve as covariates.</p>
-<p><code><a href="../reference/read_trial_data.html">read_trial_data()</a></code> is a small convenience wrapper for reading such data from a CSV file into a tibble. It imposes no particular column structure; it simply reads the file:</p>
+<p>The column <em>names</em> are up to you: you pass them to the
+relevant function arguments (the treatment, outcome and follow-up names
+to the policy and censoring helpers; the identifier to
+<code><a href="../reference/create_final_data.html">create_final_data()</a></code>; any covariates to
+<code><a href="../reference/estimate_censoring.html">estimate_censoring()</a></code>), as we do in Section 3. Any
+additional columns are carried along and can serve as covariates.</p>
+<p><code><a href="../reference/read_trial_data.html">read_trial_data()</a></code> is a small convenience wrapper for
+reading such data from a CSV file into a tibble. It imposes no
+particular column structure; it simply reads the file:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">my_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_trial_data.html">read_trial_data</a></span><span class="op">(</span><span class="st">"path/to/your-data.csv"</span><span class="op">)</span></span></code></pre></div>
-<p>The companion “Getting started” vignette walks through preparing and checking an input dataset in more detail.</p>
+<p>The companion “Getting started” vignette walks through preparing and
+checking an input dataset in more detail.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="clone-censor-weighting">Clone-censor-weighting<a class="anchor" aria-label="anchor" href="#clone-censor-weighting"></a>
 </h2>
-<p>We now walk through the method on the <code>lungcancer</code> data. Each of the three ideas that give the method its name – clone, censor, weight – is presented with its rationale and then applied immediately in code, checking the result at each turn. A final step estimates the effect from the clone-censor-weighted data. We compare two strategies with a six-month grace period (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mn>182.62</mn></mrow><annotation encoding="application/x-tex">\approx 182.62</annotation></semantics></math> days).</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> arms         <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"Surgery"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> grace_period <span class="ot">&lt;-</span> <span class="fl">182.62</span></span></code></pre></div>
+<p>We now walk through the method on the <code>lungcancer</code> data.
+Each of the three ideas that give the method its name – clone, censor,
+weight – is presented with its rationale and then applied immediately in
+code, checking the result at each turn. A final step estimates the
+effect from the clone-censor-weighted data. We compare two strategies
+with a six-month grace period
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mn>182.62</mn></mrow><annotation encoding="application/x-tex">\approx 182.62</annotation></semantics></math>
+days).</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="sc">&gt;</span> arms         <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"Surgery"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="sc">&gt;</span> grace_period <span class="ot">&lt;-</span> <span class="fl">182.62</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="clone">Clone<a class="anchor" aria-label="anchor" href="#clone"></a>
 </h3>
-<p>Each eligible individual is duplicated once per strategy being compared. With two strategies, one person becomes two clones. At baseline nobody has yet violated any strategy, so at the moment of duplication both clones share an identical history. This makes the baseline covariates <em>exactly</em> balanced across arms, removing the source of immortal time bias.</p>
-<p><code><a href="../reference/clone_arms.html">clone_arms()</a></code> carries this out, returning one data frame per arm. At this point the two are identical copies of the original data; the strategy-specific logic comes next.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> clones <span class="ot">&lt;-</span> <span class="fu">clone_arms</span>(lungcancer, arms)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">names</span>(clones)</span></code></pre></div>
+<p>Each eligible individual is duplicated once per strategy being
+compared. With two strategies, one person becomes two clones. At
+baseline nobody has yet violated any strategy, so at the moment of
+duplication both clones share an identical history. This makes the
+baseline covariates <em>exactly</em> balanced across arms, removing the
+source of immortal time bias.</p>
+<p><code><a href="../reference/clone_arms.html">clone_arms()</a></code> carries this out, returning one data frame
+per arm. At this point the two are identical copies of the original
+data; the strategy-specific logic comes next.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="sc">&gt;</span> clones <span class="ot">&lt;-</span> <span class="fu">clone_arms</span>(lungcancer, arms)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">names</span>(clones)</span></code></pre></div>
 <pre><code>[1] "Control" "Surgery"</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">sapply</span>(clones, nrow)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">sapply</span>(clones, nrow)</span></code></pre></div>
 <pre><code>Control Surgery 
     200     200 </code></pre>
 </div>
 <div class="section level3">
 <h3 id="censor">Censor<a class="anchor" aria-label="anchor" href="#censor"></a>
 </h3>
-<p>Each clone is artificially censored the first moment it deviates from the strategy it represents.</p>
+<p>Each clone is artificially censored the first moment it deviates from
+the strategy it represents.</p>
 <ul>
-<li>The “surgery within 6 months” clone: if 6 months pass without surgery, the clone has now violated its strategy and is censored at the 6-month mark. If surgery occurs in time, the clone remains in the risk set.</li>
-<li>The “no surgery within 6 months” clone: if surgery occurs within 6 months, the clone is censored at the time of surgery.</li>
+<li>The “surgery within 6 months” clone: if 6 months pass without
+surgery, the clone has now violated its strategy and is censored at the
+6-month mark. If surgery occurs in time, the clone remains in the risk
+set.</li>
+<li>The “no surgery within 6 months” clone: if surgery occurs within 6
+months, the clone is censored at the time of surgery.</li>
 </ul>
-<p>In other words, each clone stays under follow-up only while it remains consistent with its strategy.</p>
-<p>The following is a tiny illustrative example. Five patients, where <code>surg_time</code> is the surgery time (months; <code>NA</code> = no surgery during observation), along with <code>death_time</code> and <code>event</code> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> = death).</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> patients <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">id         =</span> <span class="fu">c</span>(<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span>),</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">surg_time  =</span> <span class="fu">c</span>(<span class="dv">2</span>,   <span class="cn">NA</span>,  <span class="dv">4</span>,   <span class="dv">7</span>,   <span class="cn">NA</span>),   <span class="co"># surgery time (months), NA = none</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">death_time =</span> <span class="fu">c</span>(<span class="dv">10</span>,  <span class="dv">5</span>,   <span class="dv">12</span>,  <span class="dv">9</span>,   <span class="dv">8</span>),</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">event      =</span> <span class="fu">c</span>(<span class="dv">1</span>,   <span class="dv">1</span>,   <span class="dv">1</span>,   <span class="dv">1</span>,   <span class="dv">1</span>)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> patients</span></code></pre></div>
+<p>In other words, each clone stays under follow-up only while it
+remains consistent with its strategy.</p>
+<p>The following is a tiny illustrative example. Five patients, where
+<code>surg_time</code> is the surgery time (months; <code>NA</code> = no
+surgery during observation), along with <code>death_time</code> and
+<code>event</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>
+= death).</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="sc">&gt;</span> patients <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="sc">+</span>   <span class="at">id         =</span> <span class="fu">c</span>(<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">surg_time  =</span> <span class="fu">c</span>(<span class="dv">2</span>,   <span class="cn">NA</span>,  <span class="dv">4</span>,   <span class="dv">7</span>,   <span class="cn">NA</span>),   <span class="co"># surgery time (months), NA = none</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="sc">+</span>   <span class="at">death_time =</span> <span class="fu">c</span>(<span class="dv">10</span>,  <span class="dv">5</span>,   <span class="dv">12</span>,  <span class="dv">9</span>,   <span class="dv">8</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="sc">+</span>   <span class="at">event      =</span> <span class="fu">c</span>(<span class="dv">1</span>,   <span class="dv">1</span>,   <span class="dv">1</span>,   <span class="dv">1</span>,   <span class="dv">1</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="sc">&gt;</span> patients</span></code></pre></div>
 <pre><code>  id surg_time death_time event
 1  A         2         10     1
 2  B        NA          5     1
 3  C         4         12     1
 4  D         7          9     1
 5  E        NA          8     1</code></pre>
-<p>With the strategy boundary set at 6 months, we trace by hand when each clone is censored.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> horizon <span class="ot">&lt;-</span> <span class="dv">6</span>  <span class="co"># boundary for the "surgery within 6 months" strategy</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">## --- Surgery-arm clone: surgery must occur within 6 months ---</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * surgery within 6mo -&gt; adherent, no censoring (until death / end of obs)</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * no surgery in 6mo   -&gt; censored at horizon</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> surg_clone <span class="ot">&lt;-</span> <span class="fu">within</span>(patients, {</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   followed  <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(surg_time) <span class="sc">&amp;</span> surg_time <span class="sc">&lt;=</span> horizon</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   fu_time   <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(followed, death_time, <span class="fu">pmin</span>(horizon, death_time))</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   status    <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(followed, event, <span class="dv">0</span>)   <span class="co"># censored -&gt; status = 0</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   arm       <span class="ot">&lt;-</span> <span class="st">"surgery"</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> })</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">## --- Control-arm clone: surgery must NOT occur within 6 months ---</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * no surgery in 6mo   -&gt; adherent</span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * surgery within 6mo -&gt; censored at time of surgery</span></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> ctrl_clone <span class="ot">&lt;-</span> <span class="fu">within</span>(patients, {</span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   violated  <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(surg_time) <span class="sc">&amp;</span> surg_time <span class="sc">&lt;=</span> horizon</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   fu_time   <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(violated, surg_time, death_time)</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   status    <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(violated, <span class="dv">0</span>, event)</span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   arm       <span class="ot">&lt;-</span> <span class="st">"control"</span></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> })</span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"arm"</span>, <span class="st">"fu_time"</span>, <span class="st">"status"</span>)</span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">rbind</span>(surg_clone[cols], ctrl_clone[cols])</span></code></pre></div>
+<p>With the strategy boundary set at 6 months, we trace by hand when
+each clone is censored.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="sc">&gt;</span> horizon <span class="ot">&lt;-</span> <span class="dv">6</span>  <span class="co"># boundary for the "surgery within 6 months" strategy</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">## --- Surgery-arm clone: surgery must occur within 6 months ---</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * surgery within 6mo -&gt; adherent, no censoring (until death / end of obs)</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * no surgery in 6mo   -&gt; censored at horizon</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="er">&gt;</span> surg_clone <span class="ot">&lt;-</span> <span class="fu">within</span>(patients, {</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="sc">+</span>   followed  <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(surg_time) <span class="sc">&amp;</span> surg_time <span class="sc">&lt;=</span> horizon</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="sc">+</span>   fu_time   <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(followed, death_time, <span class="fu">pmin</span>(horizon, death_time))</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="sc">+</span>   status    <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(followed, event, <span class="dv">0</span>)   <span class="co"># censored -&gt; status = 0</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="sc">+</span>   arm       <span class="ot">&lt;-</span> <span class="st">"surgery"</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="sc">+</span> })</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">## --- Control-arm clone: surgery must NOT occur within 6 months ---</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * no surgery in 6mo   -&gt; adherent</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a><span class="er">&gt;</span> <span class="do">##   * surgery within 6mo -&gt; censored at time of surgery</span></span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="er">&gt;</span> ctrl_clone <span class="ot">&lt;-</span> <span class="fu">within</span>(patients, {</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a><span class="sc">+</span>   violated  <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(surg_time) <span class="sc">&amp;</span> surg_time <span class="sc">&lt;=</span> horizon</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a><span class="sc">+</span>   fu_time   <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(violated, surg_time, death_time)</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="sc">+</span>   status    <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(violated, <span class="dv">0</span>, event)</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a><span class="sc">+</span>   arm       <span class="ot">&lt;-</span> <span class="st">"control"</span></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a><span class="sc">+</span> })</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a><span class="er">&gt;</span> cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"id"</span>, <span class="st">"arm"</span>, <span class="st">"fu_time"</span>, <span class="st">"status"</span>)</span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">rbind</span>(surg_clone[cols], ctrl_clone[cols])</span></code></pre></div>
 <pre><code>   id     arm fu_time status
 1   A surgery      10      1
 2   B surgery       5      0
@@ -286,42 +392,55 @@ p.caption { text-align: center; }
 8   C control       4      0
 9   D control       9      1
 10  E control       8      1</code></pre>
-<p>In the output, patient B (no surgery, dies at month 5) dies before the 6-month boundary, so in neither arm has the strategy been violated. Patient A (surgery at month 2) is adherent in the surgery arm but is censored at month 2 in the control arm. This table is the core intuition of CCW.</p>
-<p>The package derives exactly this censoring from the grace-period rules, on the real data. <code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> and <code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code> return the rules for the emulated outcome, follow-up, and censoring; <code><a href="../reference/apply_logics.html">apply_logics()</a></code> evaluates them against the clones.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> policies <span class="ot">&lt;-</span> <span class="fu">create_policy_A</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   arms,</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">treatment         =</span> <span class="st">"surgery"</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">time_to_treatment =</span> <span class="st">"timetosurgery"</span>,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">grace_period      =</span> grace_period,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">outcome           =</span> <span class="st">"death"</span>,</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">followup          =</span> <span class="st">"fup_obs"</span>,</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_outcome     =</span> <span class="st">"outcome"</span>,</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_followup    =</span> <span class="st">"fup"</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> clones_policy <span class="ot">&lt;-</span> <span class="fu">apply_logics</span>(clones, policies)</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> censoring_logics <span class="ot">&lt;-</span> <span class="fu">create_censoring_logics_A</span>(</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   arms,</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">treatment                 =</span> <span class="st">"surgery"</span>,</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">time_to_treatment         =</span> <span class="st">"timetosurgery"</span>,</span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">grace_period              =</span> grace_period,</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">followup                  =</span> <span class="st">"fup_obs"</span>,</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_censoring           =</span> <span class="st">"censoring"</span>,</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_uncensored_followup =</span> <span class="st">"fup_uncensored"</span></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> clones_censored <span class="ot">&lt;-</span> <span class="fu">apply_logics</span>(clones_policy, censoring_logics)</span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(clones_censored<span class="sc">$</span>Surgery), <span class="fu">names</span>(lungcancer))</span></code></pre></div>
+<p>In the output, patient B (no surgery, dies at month 5) dies before
+the 6-month boundary, so in neither arm has the strategy been violated.
+Patient A (surgery at month 2) is adherent in the surgery arm but is
+censored at month 2 in the control arm. This table is the core intuition
+of CCW.</p>
+<p>The package derives exactly this censoring from the grace-period
+rules, on the real data. <code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> and
+<code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code> return the rules for the
+emulated outcome, follow-up, and censoring; <code><a href="../reference/apply_logics.html">apply_logics()</a></code>
+evaluates them against the clones.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="sc">&gt;</span> policies <span class="ot">&lt;-</span> <span class="fu">create_policy_A</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="sc">+</span>   arms,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">treatment         =</span> <span class="st">"surgery"</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="sc">+</span>   <span class="at">time_to_treatment =</span> <span class="st">"timetosurgery"</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="sc">+</span>   <span class="at">grace_period      =</span> grace_period,</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="sc">+</span>   <span class="at">outcome           =</span> <span class="st">"death"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="sc">+</span>   <span class="at">followup          =</span> <span class="st">"fup_obs"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_outcome     =</span> <span class="st">"outcome"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_followup    =</span> <span class="st">"fup"</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="sc">&gt;</span> clones_policy <span class="ot">&lt;-</span> <span class="fu">apply_logics</span>(clones, policies)</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="er">&gt;</span> censoring_logics <span class="ot">&lt;-</span> <span class="fu">create_censoring_logics_A</span>(</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="sc">+</span>   arms,</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="sc">+</span>   <span class="at">treatment                 =</span> <span class="st">"surgery"</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="sc">+</span>   <span class="at">time_to_treatment         =</span> <span class="st">"timetosurgery"</span>,</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a><span class="sc">+</span>   <span class="at">grace_period              =</span> grace_period,</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a><span class="sc">+</span>   <span class="at">followup                  =</span> <span class="st">"fup_obs"</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_censoring           =</span> <span class="st">"censoring"</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_uncensored_followup =</span> <span class="st">"fup_uncensored"</span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a><span class="sc">&gt;</span> clones_censored <span class="ot">&lt;-</span> <span class="fu">apply_logics</span>(clones_policy, censoring_logics)</span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(clones_censored<span class="sc">$</span>Surgery), <span class="fu">names</span>(lungcancer))</span></code></pre></div>
 <pre><code>[1] "outcome"        "fup"            "censoring"      "fup_uncensored"</code></pre>
-<p>Finally, <code><a href="../reference/create_final_data.html">create_final_data()</a></code> expands each clone into a counting-process (“long”) table – one row per patient-time interval, bounded by <code>Tstart</code> and <code>Tstop</code> – the format the weighting step requires. Because each patient contributes several intervals, each arm has many more rows than the original 200 patients.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> clones_final <span class="ot">&lt;-</span> <span class="fu">create_final_data</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   clones_censored,</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_followup  =</span> <span class="st">"fup"</span>,</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_outcome   =</span> <span class="st">"outcome"</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_censoring =</span> <span class="st">"censoring"</span>,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">col_ids         =</span> <span class="st">"id"</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">head</span>(clones_final<span class="sc">$</span>Surgery)</span></code></pre></div>
+<p>Finally, <code><a href="../reference/create_final_data.html">create_final_data()</a></code> expands each clone into a
+counting-process (“long”) table – one row per patient-time interval,
+bounded by <code>Tstart</code> and <code>Tstop</code> – the format the
+weighting step requires. Because each patient contributes several
+intervals, each arm has many more rows than the original 200
+patients.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="sc">&gt;</span> clones_final <span class="ot">&lt;-</span> <span class="fu">create_final_data</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="sc">+</span>   clones_censored,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_followup  =</span> <span class="st">"fup"</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_outcome   =</span> <span class="st">"outcome"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="sc">+</span>   <span class="at">clone_censoring =</span> <span class="st">"censoring"</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="sc">+</span>   <span class="at">col_ids         =</span> <span class="st">"id"</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">head</span>(clones_final<span class="sc">$</span>Surgery)</span></code></pre></div>
 <pre><code>     id surgery timetosurgery death sex charlson perf stage emergency fup_obs
 1 P5958       0            NA     0   2        1    2     2         1  365.24
 2 P5958       0            NA     0   2        1    2     2         1  365.24
@@ -336,52 +455,108 @@ p.caption { text-align: center; }
 4 79.5729        0.42         182.62  1      8  10       0         0    10    3
 5 79.5729        0.42         182.62  1     10  16       0         0    16    4
 6 79.5729        0.42         182.62  1     16  18       0         0    18    5</code></pre>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">sapply</span>(clones_final, nrow)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">sapply</span>(clones_final, nrow)</span></code></pre></div>
 <pre><code>Control Surgery 
    8792   13980 </code></pre>
 </div>
 <div class="section level3">
 <h3 id="weight">Weight<a class="anchor" aria-label="anchor" href="#weight"></a>
 </h3>
-<p>The catch is that this artificial censoring is <em>not random</em>. Whether a clone deviates (and is censored) is related to its evolving health. If, say, sicker patients are more or less likely to have surgery, the censoring introduces selection bias, which <em>inverse-probability-of-censoring weighting</em> (IPCW) corrects.</p>
-<p>Some notation first. Index individuals by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> and discrete follow-up times by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">k = 1, 2, \dots</annotation></semantics></math>; let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math> be the baseline covariates and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>k</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>L</mi><mn>0</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>L</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\bar L_k = (L_0, \dots, L_k)</annotation></semantics></math> the covariate history through time <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>. For a clone in a given arm, let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>k</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">C_k = 1</annotation></semantics></math> mean it is artificially censored at time <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\bar C_{k-1} = 0</annotation></semantics></math> that it was still uncensored up to time <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k-1</annotation></semantics></math>. The probability of being censored in an interval is modelled by pooled logistic regression on the person-time data,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>logit</mo><mo>Pr</mo><mspace width="-0.167em"></mspace><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mi>k</mi></msub><mo>=</mo><mn>1</mn><mo>∣</mo><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>k</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msup><mi>β</mi><mi>⊤</mi></msup><msub><mi>L</mi><mi>k</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+<p>The catch is that this artificial censoring is <em>not random</em>.
+Whether a clone deviates (and is censored) is related to its evolving
+health. If, say, sicker patients are more or less likely to have
+surgery, the censoring introduces selection bias, which
+<em>inverse-probability-of-censoring weighting</em> (IPCW) corrects.</p>
+<p>Some notation first. Index individuals by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+and discrete follow-up times by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">k = 1, 2, \dots</annotation></semantics></math>;
+let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math>
+be the baseline covariates and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>k</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>L</mi><mn>0</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>L</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\bar L_k = (L_0, \dots, L_k)</annotation></semantics></math>
+the covariate history through time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.
+For a clone in a given arm, let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>k</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">C_k = 1</annotation></semantics></math>
+mean it is artificially censored at time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\bar C_{k-1} = 0</annotation></semantics></math>
+that it was still uncensored up to time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k-1</annotation></semantics></math>.
+The probability of being censored in an interval is modelled by pooled
+logistic regression on the person-time data,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi mathvariant="normal">Pr</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>C</mi><mi>k</mi></msub><mo>=</mo><mn>1</mn><mo>∣</mo><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>k</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msup><mi>β</mi><mi>⊤</mi></msup><msub><mi>L</mi><mi>k</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \operatorname{logit}\Pr\!\big(C_k = 1 \mid \bar C_{k-1}=0,\; \bar L_k,\; \text{arm}\big)
 \;=\; f(t_k) + \beta^\top L_k,
 </annotation></semantics></math></p>
-<p>with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>k</mi></msub><annotation encoding="application/x-tex">t_k</annotation></semantics></math> the interval start time. By default, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f(t_k)</annotation></semantics></math> is linear. Setting <code>time_spline_df = 3</code> uses a natural cubic spline with 3 degrees of freedom, allowing the baseline log-odds of censoring to vary nonlinearly over follow-up. Spline flexibility should be supported by enough censoring events; sparse or structurally concentrated censoring can otherwise cause separation. IPCW then multiplies each clone by the inverse probability of “remaining uncensored so far,” reallocating the contribution of censored clones to similar clones that remain. The <strong>unstabilized</strong> weight is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mfrac><mn>1</mn><mrow><munderover><mo>∏</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover><mo>Pr</mo><mspace width="-0.167em"></mspace><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>∣</mo><mspace width="0.167em"></mspace><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+<p>with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mi>k</mi></msub><annotation encoding="application/x-tex">t_k</annotation></semantics></math>
+the interval start time. By default,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f(t_k)</annotation></semantics></math>
+is linear. Setting <code>time_spline_df = 3</code> uses a natural cubic
+spline with 3 degrees of freedom, allowing the baseline log-odds of
+censoring to vary nonlinearly over follow-up. Spline flexibility should
+be supported by enough censoring events; sparse or structurally
+concentrated censoring can otherwise cause separation. IPCW then
+multiplies each clone by the inverse probability of “remaining
+uncensored so far,” reallocating the contribution of censored clones to
+similar clones that remain. The <strong>unstabilized</strong> weight
+is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mfrac><mn>1</mn><mrow><munderover><mo>∏</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover><mrow><mi mathvariant="normal">Pr</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>C</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>∣</mo><mspace width="0.167em"></mspace><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
 W_i(k) \;=\;
 \frac{1}{\displaystyle\prod_{j=1}^{k}
   \Pr\!\big(C_j = 0 \,\mid\, \bar C_{j-1}=0,\; \bar L_j,\; \text{arm}\big)},
 </annotation></semantics></math></p>
-<p>and the <strong>stabilized</strong> weight replaces the constant numerator by a baseline-only model – the same regression, but with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math> in place of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar L_j</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><munderover><mo>∏</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover><mfrac><mrow><mo>Pr</mo><mspace width="-0.167em"></mspace><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>∣</mo><mspace width="0.167em"></mspace><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mn>0</mn></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo></mrow><mrow><mo>Pr</mo><mspace width="-0.167em"></mspace><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>∣</mo><mspace width="0.167em"></mspace><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p>and the <strong>stabilized</strong> weight replaces the constant
+numerator by a baseline-only model – the same regression, but with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math>
+in place of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar L_j</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><munderover><mo>∏</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover><mfrac><mrow><mrow><mi mathvariant="normal">Pr</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>C</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>∣</mo><mspace width="0.167em"></mspace><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mn>0</mn></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><mrow><mrow><mi mathvariant="normal">Pr</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>C</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="0.167em"></mspace><mo>∣</mo><mspace width="0.167em"></mspace><msub><mover><mi>C</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.278em"></mspace><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>,</mo><mspace width="0.278em"></mspace><mtext mathvariant="normal">arm</mtext><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
 SW_i(k) \;=\;
 \prod_{j=1}^{k}
 \frac{\Pr\!\big(C_j = 0 \,\mid\, \bar C_{j-1}=0,\; \bar L_0,\; \text{arm}\big)}
      {\Pr\!\big(C_j = 0 \,\mid\, \bar C_{j-1}=0,\; \bar L_j,\; \text{arm}\big)}.
 </annotation></semantics></math></p>
-<p>The <em>denominator</em> conditions on the full time-varying history <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar L_j</annotation></semantics></math> and models the actual censoring mechanism; the <em>numerator</em> conditions on baseline covariates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mn>0</mn></msub><annotation encoding="application/x-tex">\bar L_0</annotation></semantics></math> only, reducing the variance of the weights without changing the causal estimand. Taking the cumulative product across time gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W_i(k)</annotation></semantics></math> or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SW_i(k)</annotation></semantics></math>.</p>
-<p>In the package, <code><a href="../reference/estimate_censoring.html">estimate_censoring()</a></code> fits these probabilities and adds the uncensoring probability <code>P_uncens</code> to each row; <code><a href="../reference/weight_cases.html">weight_cases()</a></code> forms the weight in the column <code>weight_Cox</code>. Here <code>age</code> and <code>sex</code> are fixed at baseline, so the numerator and denominator models coincide and stabilization would make no difference; we therefore use the unstabilized <code>pooled_logit</code> weight.</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> clones_estimated <span class="ot">&lt;-</span> <span class="fu">estimate_censoring</span>(</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   clones_final,</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">predictors =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>),</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method =</span> <span class="st">"pooled_logit"</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> clones_weighted <span class="ot">&lt;-</span> <span class="fu">weight_cases</span>(clones_estimated)</span></code></pre></div>
-<p>It is good practice to inspect the weight distribution: extremely large weights inflate variance and can signal near-violations of positivity.</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> weights_all <span class="ot">&lt;-</span> <span class="fu">unlist</span>(</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">lapply</span>(clones_weighted, <span class="cf">function</span>(x) x[[<span class="st">"weight_Cox"</span>]]),</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">use.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">summary</span>(weights_all)</span></code></pre></div>
+<p>The <em>denominator</em> conditions on the full time-varying history
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar L_j</annotation></semantics></math>
+and models the actual censoring mechanism; the <em>numerator</em>
+conditions on baseline covariates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>L</mi><mo accent="true">‾</mo></mover><mn>0</mn></msub><annotation encoding="application/x-tex">\bar L_0</annotation></semantics></math>
+only, reducing the variance of the weights without changing the causal
+estimand. Taking the cumulative product across time gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W_i(k)</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><msub><mi>W</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SW_i(k)</annotation></semantics></math>.</p>
+<p>In the package, <code><a href="../reference/estimate_censoring.html">estimate_censoring()</a></code> fits these
+probabilities and adds the uncensoring probability <code>P_uncens</code>
+to each row; <code><a href="../reference/weight_cases.html">weight_cases()</a></code> forms the weight in the column
+<code>weight_Cox</code>. Here <code>age</code> and <code>sex</code> are
+fixed at baseline, so the numerator and denominator models coincide and
+stabilization would make no difference; we therefore use the
+unstabilized <code>pooled_logit</code> weight.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="sc">&gt;</span> clones_estimated <span class="ot">&lt;-</span> <span class="fu">estimate_censoring</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="sc">+</span>   clones_final,</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">predictors =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>),</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method =</span> <span class="st">"pooled_logit"</span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a><span class="sc">&gt;</span> clones_weighted <span class="ot">&lt;-</span> <span class="fu">weight_cases</span>(clones_estimated)</span></code></pre></div>
+<p>It is good practice to inspect the weight distribution: extremely
+large weights inflate variance and can signal near-violations of
+positivity.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="sc">&gt;</span> weights_all <span class="ot">&lt;-</span> <span class="fu">unlist</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">lapply</span>(clones_weighted, <span class="cf">function</span>(x) x[[<span class="st">"weight_Cox"</span>]]),</span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">use.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">summary</span>(weights_all)</span></code></pre></div>
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
   1.000   1.054   1.176   1.409   1.532   4.751 </code></pre>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">hist</span>(weights_all, <span class="at">breaks =</span> <span class="dv">40</span>, <span class="at">col =</span> <span class="st">"grey80"</span>, <span class="at">border =</span> <span class="st">"white"</span>,</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>      <span class="at">main =</span> <span class="cn">NULL</span>, <span class="at">xlab =</span> <span class="st">"IPC weight"</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">hist</span>(weights_all, <span class="at">breaks =</span> <span class="dv">40</span>, <span class="at">col =</span> <span class="st">"grey80"</span>, <span class="at">border =</span> <span class="st">"white"</span>,</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="sc">+</span>      <span class="at">main =</span> <span class="cn">NULL</span>, <span class="at">xlab =</span> <span class="st">"IPC weight"</span>)</span></code></pre></div>
 <div class="figure">
-<img src="clonecensorweighting_hw_files/figure-html/weight-diagnostics-1.png" class="r-plt" alt="Distribution of IPC weights." width="576"><p class="caption">
+<img src="clonecensorweighting_hw_files/figure-html/weight-diagnostics-1.png" alt="Distribution of IPC weights." width="576"><p class="caption">
 Distribution of IPC weights.
 </p>
 </div>
@@ -389,58 +564,75 @@ Distribution of IPC weights.
 <div class="section level3">
 <h3 id="estimating-the-effect">Estimating the effect<a class="anchor" aria-label="anchor" href="#estimating-the-effect"></a>
 </h3>
-<p>With clone-censor-weighted data in hand, <code><a href="../reference/emul_estimate.html">emul_estimate()</a></code> fits the weighted Cox model</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mspace width="-0.167em"></mspace><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><mi>t</mi><mo>∣</mo><mtext mathvariant="normal">arm</mtext><mo>,</mo><mi>L</mi><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo>exp</mo><mspace width="-0.167em"></mspace><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">{</mo><mi>γ</mi><mspace width="0.167em"></mspace><mstyle mathvariant="double-struck"><mn>1</mn></mstyle><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">arm</mtext><mo>=</mo><mtext mathvariant="normal">treated</mtext><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msup><mi>δ</mi><mi>⊤</mi></msup><mi>L</mi><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">}</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+<p>With clone-censor-weighted data in hand, <code><a href="../reference/emul_estimate.html">emul_estimate()</a></code>
+fits the weighted Cox model</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>t</mi><mo>∣</mo><mtext mathvariant="normal">arm</mtext><mo>,</mo><mi>L</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">{</mo><mi>γ</mi><mspace width="0.167em"></mspace><mn>𝟙</mn><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">arm</mtext><mo>=</mo><mtext mathvariant="normal">treated</mtext><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msup><mi>δ</mi><mi>⊤</mi></msup><mi>L</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">}</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \lambda\!\big(t \mid \text{arm}, L\big)
 \;=\; \lambda_0(t)\,\exp\!\big\{\gamma\,\mathbb{1}(\text{arm}=\text{treated}) + \delta^\top L\big\},
 </annotation></semantics></math></p>
-<p>weighting each person-time record by its IPC weight. The per-protocol hazard ratio is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathvariant="normal"><mi>H</mi><mi>R</mi></mstyle><mo>=</mo><msup><mi>e</mi><mi>γ</mi></msup></mrow><annotation encoding="application/x-tex">\mathrm{HR} = e^{\gamma}</annotation></semantics></math> – the causal contrast specified in Section 2.</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cox_fit <span class="ot">&lt;-</span> <span class="fu">emul_estimate</span>(</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   clones_weighted,</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method     =</span> <span class="st">"Cox"</span>,</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">weights    =</span> <span class="st">"weight_Cox"</span>,</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">predictors =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">summary</span>(cox_fit)<span class="sc">$</span>conf.int</span></code></pre></div>
+<p>weighting each person-time record by its IPC weight. The per-protocol
+hazard ratio is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">R</mi></mrow><mo>=</mo><msup><mi>e</mi><mi>γ</mi></msup></mrow><annotation encoding="application/x-tex">\mathrm{HR} = e^{\gamma}</annotation></semantics></math>
+– the causal contrast specified in Section 2.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="sc">&gt;</span> cox_fit <span class="ot">&lt;-</span> <span class="fu">emul_estimate</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a><span class="sc">+</span>   clones_weighted,</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method     =</span> <span class="st">"Cox"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="sc">+</span>   <span class="at">weights    =</span> <span class="st">"weight_Cox"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a><span class="sc">+</span>   <span class="at">predictors =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">summary</span>(cox_fit)<span class="sc">$</span>conf.int</span></code></pre></div>
 <pre><code>            exp(coef) exp(-coef) lower .95 upper .95
 armsSurgery 0.4905093   2.038697 0.3216575 0.7479989
 age         0.9702208   1.030693 0.9150175 1.0287545
 sex         0.4788167   2.088482 0.2543053 0.9015361</code></pre>
-<p>Because the weights make the effective sample differ from the raw data, the model-based standard error is unreliable. <code><a href="../reference/emul_estimate_bootstrap.html">emul_estimate_bootstrap()</a></code> resamples patients from the original subject-level data <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> times. Within every resample, it repeats cloning, artificial censoring, person-time expansion, censoring-model estimation, weighting, and outcome-model estimation before taking the percentile interval of the resulting hazard ratios,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><msubsup><mover><mstyle mathvariant="normal"><mi>H</mi><mi>R</mi></mstyle><mo accent="true">̂</mo></mover><mrow><mo stretchy="false" form="prefix">(</mo><mi>α</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><mo>*</mo></msubsup><mo>,</mo><mspace width="0.222em"></mspace><msubsup><mover><mstyle mathvariant="normal"><mi>H</mi><mi>R</mi></mstyle><mo accent="true">̂</mo></mover><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>α</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><mo>*</mo></msubsup><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+<p>Because the weights make the effective sample differ from the raw
+data, the model-based standard error is unreliable.
+<code><a href="../reference/emul_estimate_bootstrap.html">emul_estimate_bootstrap()</a></code> resamples patients from the
+original subject-level data
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+times. Within every resample, it repeats cloning, artificial censoring,
+person-time expansion, censoring-model estimation, weighting, and
+outcome-model estimation before taking the percentile interval of the
+resulting hazard ratios,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msubsup><mover><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">R</mi></mrow><mo accent="true">̂</mo></mover><mrow><mo stretchy="false" form="prefix">(</mo><mi>α</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><mo>*</mo></msubsup><mo>,</mo><mspace width="0.222em"></mspace><msubsup><mover><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">R</mi></mrow><mo accent="true">̂</mo></mover><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>α</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><mo>*</mo></msubsup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \big(\widehat{\mathrm{HR}}^{*}_{(\alpha/2)},\ \widehat{\mathrm{HR}}^{*}_{(1-\alpha/2)}\big),
 </annotation></semantics></math></p>
-<p>at confidence level <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>α</mi></mrow><annotation encoding="application/x-tex">1-\alpha</annotation></semantics></math>. The number of resamples <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> is kept small here for speed.</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> boot <span class="ot">&lt;-</span> <span class="fu">emul_estimate_bootstrap</span>(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   lungcancer,</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">arms                   =</span> arms,</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">id                     =</span> <span class="st">"id"</span>,</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">treatment              =</span> <span class="st">"surgery"</span>,</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">time_to_treatment      =</span> <span class="st">"timetosurgery"</span>,</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">grace_period           =</span> grace_period,</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">outcome                =</span> <span class="st">"death"</span>,</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">followup               =</span> <span class="st">"fup_obs"</span>,</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">censoring_predictors   =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>),</span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method                 =</span> <span class="st">"Cox"</span>,</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">predictors             =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>),</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">n_bootstrap            =</span> <span class="dv">10</span>,</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">seed                   =</span> <span class="dv">1</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">c</span>(</span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">HR =</span> boot<span class="sc">$</span>estimate,</span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">HR_lower =</span> boot<span class="sc">$</span>ci_lower,</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">HR_upper =</span> boot<span class="sc">$</span>ci_upper</span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span></code></pre></div>
+<p>at confidence level
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>α</mi></mrow><annotation encoding="application/x-tex">1-\alpha</annotation></semantics></math>.
+The number of resamples
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+is kept small here for speed.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="sc">&gt;</span> boot <span class="ot">&lt;-</span> <span class="fu">emul_estimate_bootstrap</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="sc">+</span>   lungcancer,</span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="sc">+</span>   <span class="at">arms                   =</span> arms,</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="sc">+</span>   <span class="at">id                     =</span> <span class="st">"id"</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="sc">+</span>   <span class="at">treatment              =</span> <span class="st">"surgery"</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a><span class="sc">+</span>   <span class="at">time_to_treatment      =</span> <span class="st">"timetosurgery"</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="sc">+</span>   <span class="at">grace_period           =</span> grace_period,</span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a><span class="sc">+</span>   <span class="at">outcome                =</span> <span class="st">"death"</span>,</span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a><span class="sc">+</span>   <span class="at">followup               =</span> <span class="st">"fup_obs"</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="sc">+</span>   <span class="at">censoring_predictors   =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>),</span>
+<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method                 =</span> <span class="st">"Cox"</span>,</span>
+<span id="cb25-12"><a href="#cb25-12" tabindex="-1"></a><span class="sc">+</span>   <span class="at">predictors             =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"sex"</span>),</span>
+<span id="cb25-13"><a href="#cb25-13" tabindex="-1"></a><span class="sc">+</span>   <span class="at">n_bootstrap            =</span> <span class="dv">10</span>,</span>
+<span id="cb25-14"><a href="#cb25-14" tabindex="-1"></a><span class="sc">+</span>   <span class="at">seed                   =</span> <span class="dv">1</span></span>
+<span id="cb25-15"><a href="#cb25-15" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb25-16"><a href="#cb25-16" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">c</span>(</span>
+<span id="cb25-17"><a href="#cb25-17" tabindex="-1"></a><span class="sc">+</span>   <span class="at">HR =</span> boot<span class="sc">$</span>estimate,</span>
+<span id="cb25-18"><a href="#cb25-18" tabindex="-1"></a><span class="sc">+</span>   <span class="at">HR_lower =</span> boot<span class="sc">$</span>ci_lower,</span>
+<span id="cb25-19"><a href="#cb25-19" tabindex="-1"></a><span class="sc">+</span>   <span class="at">HR_upper =</span> boot<span class="sc">$</span>ci_upper</span>
+<span id="cb25-20"><a href="#cb25-20" tabindex="-1"></a><span class="sc">+</span> )</span></code></pre></div>
 <pre><code>       HR  HR_lower  HR_upper 
 0.4905093 0.4050924 0.7313888 </code></pre>
-<p>For a visual summary, <code>method = "KM"</code> returns weighted Kaplan-Meier curves for the two strategies.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> km_fit <span class="ot">&lt;-</span> <span class="fu">emul_estimate</span>(clones_weighted, <span class="at">method =</span> <span class="st">"KM"</span>, <span class="at">weights =</span> <span class="st">"weight_Cox"</span>)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">plot</span>(km_fit, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"#1b9e77"</span>, <span class="st">"#d95f02"</span>), <span class="at">lwd =</span> <span class="dv">2</span>,</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>      <span class="at">xlab =</span> <span class="st">"Days since time zero"</span>, <span class="at">ylab =</span> <span class="st">"Survival probability"</span>)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">legend</span>(<span class="st">"bottomleft"</span>, <span class="at">legend =</span> arms, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"#1b9e77"</span>, <span class="st">"#d95f02"</span>),</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>        <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div>
+<p>For a visual summary, <code>method = "KM"</code> returns weighted
+Kaplan-Meier curves for the two strategies.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="sc">&gt;</span> km_fit <span class="ot">&lt;-</span> <span class="fu">emul_estimate</span>(clones_weighted, <span class="at">method =</span> <span class="st">"KM"</span>, <span class="at">weights =</span> <span class="st">"weight_Cox"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">plot</span>(km_fit, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"#1b9e77"</span>, <span class="st">"#d95f02"</span>), <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a><span class="sc">+</span>      <span class="at">xlab =</span> <span class="st">"Days since time zero"</span>, <span class="at">ylab =</span> <span class="st">"Survival probability"</span>)</span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">legend</span>(<span class="st">"bottomleft"</span>, <span class="at">legend =</span> arms, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"#1b9e77"</span>, <span class="st">"#d95f02"</span>),</span>
+<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a><span class="sc">+</span>        <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div>
 <div class="figure">
-<img src="clonecensorweighting_hw_files/figure-html/km-1.png" class="r-plt" alt="Weighted survival curves by strategy." width="576"><p class="caption">
+<img src="clonecensorweighting_hw_files/figure-html/km-1.png" alt="Weighted survival curves by strategy." width="576"><p class="caption">
 Weighted survival curves by strategy.
 </p>
 </div>
@@ -449,11 +641,24 @@ Weighted survival curves by strategy.
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Gaber, C. E., Ghazarian, A. A., Strassle, P. D., Ribeiro, T. B., Salas, M., &amp; Maringe, C. (2024). De-mystifying the clone-censor-weight method for causal research using observational data: a primer for cancer researchers. <em>Cancer Medicine</em>, 13(23), e70461.</p>
-<p>Hernán, M. A., Brumback, B., &amp; Robins, J. M. (2000). Marginal structural models to estimate the causal effect of zidovudine on the survival of HIV-positive men. <em>Epidemiology</em>, 11(5), 561-570.</p>
-<p>Hernán, M. A., &amp; Robins, J. M. (2016). Using big data to emulate a target trial when a randomized trial is not available. <em>American Journal of Epidemiology</em>, 183(8), 758-764.</p>
-<p>Hernán, M. A., Wang, W., &amp; Leaf, D. E. (2022). Target trial emulation: a framework for causal inference from observational data. <em>JAMA</em>, 328(24), 2446-2447.</p>
-<p>Maringe, C., Benitez Majano, S., Exarchakou, A., et al. (2020). Reflection on modern methods: trial emulation in the presence of immortal-time bias. <em>International Journal of Epidemiology</em>, 49(5), 1719-1729.</p>
+<p>Gaber, C. E., Ghazarian, A. A., Strassle, P. D., Ribeiro, T. B.,
+Salas, M., &amp; Maringe, C. (2024). De-mystifying the
+clone-censor-weight method for causal research using observational data:
+a primer for cancer researchers. <em>Cancer Medicine</em>, 13(23),
+e70461.</p>
+<p>Hernán, M. A., Brumback, B., &amp; Robins, J. M. (2000). Marginal
+structural models to estimate the causal effect of zidovudine on the
+survival of HIV-positive men. <em>Epidemiology</em>, 11(5), 561-570.</p>
+<p>Hernán, M. A., &amp; Robins, J. M. (2016). Using big data to emulate
+a target trial when a randomized trial is not available. <em>American
+Journal of Epidemiology</em>, 183(8), 758-764.</p>
+<p>Hernán, M. A., Wang, W., &amp; Leaf, D. E. (2022). Target trial
+emulation: a framework for causal inference from observational data.
+<em>JAMA</em>, 328(24), 2446-2447.</p>
+<p>Maringe, C., Benitez Majano, S., Exarchakou, A., et al. (2020).
+Reflection on modern methods: trial emulation in the presence of
+immortal-time bias. <em>International Journal of Epidemiology</em>,
+49(5), 1719-1729.</p>
 </div>
   </div>
 
@@ -472,7 +677,7 @@ Weighted survival curves by strategy.
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>

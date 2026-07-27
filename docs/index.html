@@ -96,35 +96,35 @@
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="section level3">
-<h3 id="1-clone-the-repository">1. Clone the repository<a class="anchor" aria-label="anchor" href="#1-clone-the-repository"></a>
+<h3 id="id_1-clone-the-repository">1. Clone the repository<a class="anchor" aria-label="anchor" href="#id_1-clone-the-repository"></a>
 </h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/CausalInferenceLab/clonecensorweighting.git</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> clonecensorweighting</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/CausalInferenceLab/clonecensorweighting.git</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="bu">cd</span> clonecensorweighting</span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="2-use-rig-to-install-r-442">2. Use <code>rig</code> to install R 4.4.2<a class="anchor" aria-label="anchor" href="#2-use-rig-to-install-r-442"></a>
+<h3 id="id_2-use-rig-to-install-r-442">2. Use <code>rig</code> to install R 4.4.2<a class="anchor" aria-label="anchor" href="#id_2-use-rig-to-install-r-442"></a>
 </h3>
 <p>This project is pinned to R <code>4.4.2</code> for reproducibility.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rig</span> add 4.4.2</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rig</span> default 4.4.2</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">rig</span> add 4.4.2</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="ex">rig</span> default 4.4.2</span></code></pre></div>
 <p>If you already have R <code>4.4.2</code>, you can skip <code>rig add 4.4.2</code>.</p>
 </div>
 <div class="section level3">
-<h3 id="3-restore-the-project-package-library-with-renv">3. Restore the project package library with <code>renv</code>
-<a class="anchor" aria-label="anchor" href="#3-restore-the-project-package-library-with-renv"></a>
+<h3 id="id_3-restore-the-project-package-library-with-renv">3. Restore the project package library with <code>renv</code>
+<a class="anchor" aria-label="anchor" href="#id_3-restore-the-project-package-library-with-renv"></a>
 </h3>
 <p>Open R in the project directory and run:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"renv"</span><span class="op">)</span></span>
-<span><span class="fu">renv</span><span class="fu">::</span><span class="fu">restore</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><code>renv::restore()</code> installs the package versions recorded in <code>renv.lock</code>, so everyone works with the same dependency set.</p>
+<span><span class="fu">renv</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/renv/reference/restore.html" class="external-link">restore</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="https://rstudio.github.io/renv/reference/restore.html" class="external-link">renv::restore()</a></code> installs the package versions recorded in <code>renv.lock</code>, so everyone works with the same dependency set.</p>
 <p>Note: this repository includes a <code>.Rprofile</code> file that activates <code>renv</code> automatically when you open the project in R.</p>
 </div>
 <div class="section level3">
-<h3 id="4-install-the-package-locally">4. Install the package locally<a class="anchor" aria-label="anchor" href="#4-install-the-package-locally"></a>
+<h3 id="id_4-install-the-package-locally">4. Install the package locally<a class="anchor" aria-label="anchor" href="#id_4-install-the-package-locally"></a>
 </h3>
 <p>From the project root:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span></code></pre></div>
 <p>Then in R:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/CausalInferenceLab/clonecensorweighting" class="external-link">clonecensorweighting</a></span><span class="op">)</span></span></code></pre></div>
@@ -247,21 +247,21 @@
 <ol style="list-style-type: decimal">
 <li>Clone the repository.</li>
 <li>Switch to R <code>4.4.2</code> with <code>rig</code>.</li>
-<li>Run <code>renv::restore()</code>.</li>
+<li>Run <code><a href="https://rstudio.github.io/renv/reference/restore.html" class="external-link">renv::restore()</a></code>.</li>
 <li>Make your changes in a branch.</li>
 <li>Run checks before opening a pull request.</li>
 </ol>
 <p>Useful commands:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> CMD check <span class="at">--no-manual</span> .</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="ex">R</span> CMD check <span class="at">--no-manual</span> .</span></code></pre></div>
 <p>In R:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">testthat</span><span class="fu">::</span><span class="fu"><a href="https://testthat.r-lib.org/reference/test_package.html" class="external-link">test_local</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>If you add, remove, or upgrade dependencies, update the lockfile from R:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">renv</span><span class="fu">::</span><span class="va">settings</span><span class="op">$</span><span class="fu">snapshot.type</span><span class="op">(</span><span class="st">"explicit"</span><span class="op">)</span></span>
-<span><span class="fu">renv</span><span class="fu">::</span><span class="fu">status</span><span class="op">(</span>dev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu">renv</span><span class="fu">::</span><span class="fu">snapshot</span><span class="op">(</span>dev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">renv</span><span class="fu">::</span><span class="va"><a href="https://rstudio.github.io/renv/reference/settings.html" class="external-link">settings</a></span><span class="op">$</span><span class="fu">snapshot.type</span><span class="op">(</span><span class="st">"explicit"</span><span class="op">)</span></span>
+<span><span class="fu">renv</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/renv/reference/status.html" class="external-link">status</a></span><span class="op">(</span>dev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">renv</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/renv/reference/snapshot.html" class="external-link">snapshot</a></span><span class="op">(</span>dev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>Please commit both code changes and the updated <code>renv.lock</code> when dependency changes are intentional.</p>
 </div>
 <div class="section level2">
@@ -308,8 +308,8 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Sang Ho Park <br><small class="roles"> Author, maintainer </small>   </li>
-<li>Youngrok Lee <br><small class="roles"> Author </small>   </li>
+<li>Sang Ho Park <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Youngrok Lee <br><small class="roles"> Author </small>  </li>
 </ul>
 </div>
 
@@ -326,7 +326,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>
