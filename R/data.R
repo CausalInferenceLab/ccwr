@@ -43,8 +43,8 @@
 #' A data frame with 13 rows and 5 columns:
 #' \describe{
 #'   \item{id}{patient identifier}
-#'   \item{surgery}{observed treatment 1 if the patient received surgery within 6 month, 0 otherwise}
-#'   \item{timetosurgery}{time to surgery (NA if no surgery)}
+#'   \item{surgery}{observed treatment 1 if the patient received surgery during follow-up, 0 otherwise}
+#'   \item{time_to_surgery}{time to surgery in days (NA if no surgery)}
 #'   \item{death}{observed event at the latest follow-up, 1: dead, 0: alive}
 #'   \item{followup}{observed follow-up time (time to death or time to latest followup with 1 year (365 days) at maximum)}
 #' }
