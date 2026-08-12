@@ -1,6 +1,6 @@
 if (requireNamespace("testthat", quietly = TRUE)) {
   library(testthat)
-  library(clonecensorweighting)
+  library(ccwr)
 
-  test_check("clonecensorweighting")
+  test_check("ccwr")
 }

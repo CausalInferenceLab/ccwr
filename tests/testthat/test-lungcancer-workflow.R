@@ -1,5 +1,5 @@
 make_lungcancer_workflow <- function() {
-  data(lungcancer, package = "clonecensorweighting")
+  data(lungcancer, package = "ccwr")
 
   arms <- c("Control", "Surgery")
   clones <- clone_arms(lungcancer, arms)
