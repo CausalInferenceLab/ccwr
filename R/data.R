@@ -7,6 +7,9 @@
 #' 106 of them received surgery within six months of their diagnosis and 
 #' 48 died in the year.
 #'
+#' See `system.file("COPYRIGHTS", package = "ccwr")` for the source and
+#' copyright notice.
+#'
 #' @format ## `lungcancer`
 #' A data frame with 200 rows and 12 columns:
 #' \describe{
@@ -38,6 +41,9 @@
 #' allowing at most one treatment (surgery in this example) for each patient
 #' and outcome event (death in this example) happens at most once for each
 #' patient.
+#'
+#' See `system.file("COPYRIGHTS", package = "ccwr")` for the source and
+#' copyright notice.
 #'
 #' @format ## `patients13`
 #' A data frame with 13 rows and 5 columns:

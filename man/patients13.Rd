@@ -32,6 +32,10 @@ allowing at most one treatment (surgery in this example) for each patient
 and outcome event (death in this example) happens at most once for each
 patient.
 }
+\details{
+See \code{system.file("COPYRIGHTS", package = "ccwr")} for the source and
+copyright notice.
+}
 \examples{
 data(patients13)
 }

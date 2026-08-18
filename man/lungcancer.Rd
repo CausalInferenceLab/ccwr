@@ -38,6 +38,10 @@ These patients are followed up for a year following their cancer diagnosis:
 106 of them received surgery within six months of their diagnosis and
 48 died in the year.
 }
+\details{
+See \code{system.file("COPYRIGHTS", package = "ccwr")} for the source and
+copyright notice.
+}
 \examples{
 data(lungcancer)
 }
