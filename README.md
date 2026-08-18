@@ -91,7 +91,14 @@ censoring_logics <- create_censoring_logics_A(
   clone_uncensored_followup = "fup_uncensored"
 )
 clones_censored <- apply_logics(clones_policy, censoring_logics)
+```
 
+`fup_uncensored` is the strategy-specific follow-up time for the censoring
+rules. It remains the observed follow-up time when a clone adheres to its
+assigned strategy and is set to the artificial-censoring time only when that
+clone deviates from the strategy.
+
+```r
 clones_final <- create_final_data(
   clones_censored,
   clone_followup = "fup",

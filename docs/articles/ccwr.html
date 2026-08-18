@@ -456,13 +456,14 @@ next step.</p>
 <p><code><a href="../reference/create_policy_A.html">create_policy_A()</a></code> produces the rules for the emulated
 outcome and follow-up under the grace-period policy, and
 <code><a href="../reference/create_censoring_logics_A.html">create_censoring_logics_A()</a></code> produces the rules for the
-censoring indicator and the time at which that indicator can first be
-determined. Here we name the resulting columns explicitly
-(<code>outcome</code>, <code>fup</code>, <code>censoring</code>,
-<code>fup_uncensored</code>); if these arguments are omitted, the
-dot-prefixed names <code>.outcome</code>, <code>.fup</code>,
-<code>.censoring</code> and <code>.fup_uncensored</code> are used
-instead.</p>
+censoring indicator and strategy-specific follow-up used by the censoring
+process. <code>fup_uncensored</code> retains observed follow-up for adherent
+clones and is set to the artificial-censoring time only for a clone that
+deviates from its assigned strategy. Here we name the resulting columns
+explicitly (<code>outcome</code>, <code>fup</code>, <code>censoring</code>,
+<code>fup_uncensored</code>); if these arguments are omitted, the dot-prefixed
+names <code>.outcome</code>, <code>.fup</code>, <code>.censoring</code> and
+<code>.fup_uncensored</code> are used instead.</p>
 <p><code><a href="../reference/apply_logics.html">apply_logics()</a></code> evaluates a set of rules against each
 arm’s data, so we call it once per rule set.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">

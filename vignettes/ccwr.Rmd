@@ -291,10 +291,13 @@ which are evaluated in the next step.
 
 `create_policy_A()` produces the rules for the emulated outcome and follow-up
 under the grace-period policy, and `create_censoring_logics_A()` produces the
-rules for the censoring indicator and the time at which that indicator can first
-be determined. Here we name the resulting columns explicitly (`outcome`, `fup`,
-`censoring`, `fup_uncensored`); if these arguments are omitted, the dot-prefixed
-names `.outcome`, `.fup`, `.censoring` and `.fup_uncensored` are used instead.
+rules for the censoring indicator and strategy-specific follow-up used by the
+censoring process. `fup_uncensored` retains observed follow-up for adherent
+clones and is set to the artificial-censoring time only for a clone that
+deviates from its assigned strategy. Here we name the resulting columns
+explicitly (`outcome`, `fup`, `censoring`, `fup_uncensored`); if these arguments
+are omitted, the dot-prefixed names `.outcome`, `.fup`, `.censoring` and
+`.fup_uncensored` are used instead.
 
 `apply_logics()` evaluates a set of rules against each arm's data, so we call it
 once per rule set.

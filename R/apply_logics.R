@@ -207,24 +207,25 @@ create_policy_A <- function(
 #'   The new variable name should not already exist in the data frame that the
 #'   return value of this function will be applied, to avoid accidental
 #'   overwriting.
-#' @param clone_uncensored_followup A name of variable to be newly created to
-#'   represent the earliest time that the value of the emulated censoring binary
-#'   indicator (i.e. variable to be named according to `clone_censoring`
-#'   argument) value can be determined for each observation. The new variable
-#'   name should not already exist in the data frame that the return value of
-#'   this function will be applied, to avoid accidental overwriting.
+#' @param clone_uncensored_followup A name of a variable to be newly created
+#'   for the strategy-specific follow-up time used by the censoring rules. It
+#'   equals the observed follow-up time for a clone that remains adherent to its
+#'   assigned strategy, and the artificial-censoring time for a clone that
+#'   violates it. The new variable name should not already exist in the data
+#'   frame that the return value of this function will be applied, to avoid
+#'   accidental overwriting.
 #'
 #' @returns A nested list. The first element of the outer list represents
 #'   untreated arm, while the second element of the outer list represents
 #'   treated arm. For each element of outer list, the first element of the inner
 #'   list represents emulated censoring binary indicator (0/1) that represents
-#'   whether the observation violated the arm's policy or not within the grace
-#'   period, and the second. The second element of the inner list represents
-#'   the earliest time that the value of the emulated censoring binary
-#'   indicator can be determined for each observation. Each element of the
-#'   inner list represents a sequence of logics to be passed into `case_when()`
-#'   when creating new variables for emulated censoring indicator and censoring
-#'   time.
+#'   whether the observation violated the arm's policy within the grace period.
+#'   The second element of the inner list represents the strategy-specific
+#'   follow-up time for the censoring process: observed follow-up for adherent
+#'   clones and artificial-censoring time for non-adherent clones. Each element
+#'   of the inner list represents a sequence of logics to be passed into
+#'   `case_when()` when creating new variables for the emulated censoring
+#'   indicator and follow-up time.
 #'
 #' @export
 #' @examples

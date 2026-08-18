@@ -52,7 +52,7 @@ test_that("definition of the outcome and survival time for each patient in each 
   )
 })
 
-test_that("artificial censoring matches all 13 Maringe patient patterns", {
+test_that("artificial censoring follow-up matches all 13 Maringe patient patterns", {
   data(patients13)
 
   arms <- c("Control", "Surgery")
@@ -74,7 +74,10 @@ test_that("artificial censoring matches all 13 Maringe patient patterns", {
   )
   expect_equal(
     result$Control$censoring_time,
-    c(61, 150, 20, 140, 10, 182, 182, 182, 182, 182, 40, 140, 182)
+    dplyr::case_when(
+      patients13$surgery == 1 & patients13$time_to_surgery <= 182 ~ patients13$time_to_surgery,
+      TRUE ~ patients13$followup
+    )
   )
   expect_equal(
     result$Surgery$artificial_censoring,
@@ -82,6 +85,10 @@ test_that("artificial censoring matches all 13 Maringe patient patterns", {
   )
   expect_equal(
     result$Surgery$censoring_time,
-    c(61, 150, 20, 140, 10, 182, 182, 182, 182, 182, 40, 140, 182)
+    dplyr::case_when(
+      patients13$surgery == 1 & patients13$time_to_surgery <= 182 ~ patients13$followup,
+      patients13$surgery == 0 & patients13$followup <= 182 ~ patients13$followup,
+      TRUE ~ 182
+    )
   )
 })
