@@ -50,7 +50,7 @@ test_that("emul_estimate_bootstrap repeats the complete analysis", {
       estimate_calls <<- estimate_calls + 1L
       original_estimate_censoring(...)
     },
-    .package = "clonecensorweighting"
+    .package = "ccwr"
   )
 
   result <- emul_estimate_bootstrap(
@@ -119,7 +119,7 @@ test_that("emul_estimate_bootstrap requires unique subject-level rows", {
 })
 
 test_that("estimation helper functions remain internal", {
-  exports <- getNamespaceExports("clonecensorweighting")
+  exports <- getNamespaceExports("ccwr")
 
   expect_false("backtick_name" %in% exports)
   expect_false("normalize_predictors" %in% exports)

@@ -19,3 +19,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Third-party example data
+
+The MIT License applies to the `ccwr` package source code. The `lungcancer`
+and `patients13` example datasets are not licensed under MIT. See
+`inst/COPYRIGHTS` for their source and copyright notice.

@@ -182,7 +182,7 @@ test_that("weight_cases creates unstabilized and stabilized IPC weights", {
 })
 
 test_that("censoring helper functions remain internal", {
-  exports <- getNamespaceExports("clonecensorweighting")
+  exports <- getNamespaceExports("ccwr")
 
   expect_false("make_censoring_formula" %in% exports)
   expect_false("cumulative_uncensoring" %in% exports)

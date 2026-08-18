@@ -16,7 +16,7 @@ make_test_clones <- function() {
 }
 
 test_that("timestamp and split helpers are internal", {
-  exports <- getNamespaceExports("clonecensorweighting")
+  exports <- getNamespaceExports("ccwr")
 
   expect_false("create_timestamp_table" %in% exports)
   expect_false("split_at_timestamp" %in% exports)

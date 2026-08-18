@@ -1,5 +1,5 @@
 ---
-title: "An Overview of the clonecensorweighting Package for R"
+title: "An Overview of the ccwr Package for R"
 author: "Jihyeon Baek, Hye Won Yang"
 date: "`r Sys.Date()`"
 output:
@@ -10,7 +10,7 @@ output:
     mathjax: null
     pandoc_args: ["--mathml"]
 vignette: >
-  %\VignetteIndexEntry{An Overview of the clonecensorweighting Package for R}
+  %\VignetteIndexEntry{An Overview of the ccwr Package for R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -24,7 +24,7 @@ set.seed(1)
 ```
 
 ```{r setup, include = FALSE}
-library(clonecensorweighting)
+library(ccwr)
 ```
 
 <style>
@@ -38,7 +38,7 @@ h3 { margin-top: 1.4em; }
 
 # Introduction
 
-`clonecensorweighting` implements the *clone-censor-weight* (CCW) procedure for
+`ccwr` implements the *clone-censor-weight* (CCW) procedure for
 emulating a target trial from observational time-to-event data.
 
 Suppose we want to know whether surgery improves survival in lung cancer
@@ -122,7 +122,7 @@ Table: Target trial components mapped onto the running example.
 
 ## Data
 
-The `clonecensorweighting` package is concerned with the causal analysis of
+The `ccwr` package is concerned with the causal analysis of
 time-to-event outcomes. The bundled `lungcancer` dataset contains 200 simulated
 lung cancer patients followed for up to one year after diagnosis; 106 received
 surgery within six months and 48 died during follow-up.

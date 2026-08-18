@@ -8,6 +8,8 @@
 ^renv\.lock$
 ^data-raw$
 
+^docs$
+
 ^example_data/
 ^.*\.Rproj$
 ^\.Rproj\.user$

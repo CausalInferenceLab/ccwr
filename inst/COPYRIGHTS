@@ -1,0 +1,22 @@
+# Copyrights and permissions for ccwr
+
+## Package source code
+
+Copyright (c) 2026 Sang Ho Park.
+
+The package source code is licensed under the MIT License. See LICENSE.
+
+## Article-derived example data
+
+The `lungcancer` and `patients13` datasets are derived from the illustrative
+example data in:
+
+Maringe C, Benitez Majano S, Exarchakou A, Smith M, Rachet B, Belot A, and
+Leyrat C (2020). "Reflection on modern methods: trial emulation in the
+presence of immortal-time bias. Assessing the benefit of major surgery for
+elderly lung cancer patients using observational data." *International Journal
+of Epidemiology*, 49(5), 1719-1729. doi:10.1093/ije/dyaa057.
+
+The article's author(s) hold the copyright to the article material, published
+by Oxford University Press on behalf of the International Epidemiological
+Association.

@@ -1,7 +1,7 @@
-# clonecensorweighting
+# ccwr
 
-`clonecensorweighting` is an R package for building reproducible
-clone-censor-weighting workflows for target trial emulation.
+`ccwr` is an R package for building reproducible clone-censor-weight (CCW)
+workflows for target trial emulation.
 
 This repository is meant to be easy to use from a fresh GitHub clone and easy
 to maintain as a shared collaboration project. The recommended setup uses:
@@ -15,8 +15,8 @@ to maintain as a shared collaboration project. The recommended setup uses:
 ### 1. Clone the repository
 
 ```sh
-git clone https://github.com/CausalInferenceLab/clonecensorweighting.git
-cd clonecensorweighting
+git clone https://github.com/CausalInferenceLab/ccwr.git
+cd ccwr
 ```
 
 ### 2. Use `rig` to install R 4.4.2
@@ -56,13 +56,13 @@ R CMD INSTALL .
 Then in R:
 
 ```r
-library(clonecensorweighting)
+library(ccwr)
 ```
 
 ## First example
 
 ```r
-library(clonecensorweighting)
+library(ccwr)
 
 data(lungcancer)
 
