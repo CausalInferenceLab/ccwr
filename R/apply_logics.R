@@ -268,7 +268,7 @@ create_censoring_logics_A <- function(
           "{treatment} == 0 & {followup} <= {grace_period} ~ {followup}"
         ),
         glue::glue(
-          "({treatment} == 0 & {followup} > {grace_period}) | ({treatment} == 1 & {time_to_treatment} > {grace_period}) ~ {grace_period}"
+          "({treatment} == 0 & {followup} > {grace_period}) | ({treatment} == 1 & {time_to_treatment} > {grace_period}) ~ {followup}"
         )
       )
     ),
@@ -286,7 +286,7 @@ create_censoring_logics_A <- function(
       ),
       fup_uncensored = c(
         glue::glue(
-          "{treatment} == 1 & {time_to_treatment} <= {grace_period} ~ {time_to_treatment}"
+          "{treatment} == 1 & {time_to_treatment} <= {grace_period} ~ {followup}"
         ),
         glue::glue(
           "{treatment} == 0 & {followup} <= {grace_period} ~ {followup}"
