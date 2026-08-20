@@ -42,10 +42,10 @@ test_that("split_at_timestamp splits each clone arm at common timestamps", {
   expect_named(result, c("Control", "Surgery"))
   expect_equal(result$Control$Tstart, c(0, 0, 5, 6, 8))
   expect_equal(result$Control$fup, c(5, 5, 6, 8, 10))
-  expect_equal(result$Control$outcome, c(1, 0, 0, 0, 0))
+  expect_equal(unname(result$Control$outcome), c(1, 0, 0, 0, 0))
   expect_equal(result$Surgery$Tstart, c(0, 5, 0, 5, 6))
   expect_equal(result$Surgery$fup, c(5, 6, 5, 6, 8))
-  expect_equal(result$Surgery$outcome, c(0, 0, 0, 0, 1))
+  expect_equal(unname(result$Surgery$outcome), c(0, 0, 0, 0, 1))
 })
 
 test_that("create_final_data combines outcome and censoring intervals", {
@@ -62,9 +62,9 @@ test_that("create_final_data combines outcome and censoring intervals", {
   expect_equal(result$Surgery$Tstop, result$Surgery$fup)
   expect_equal(result$Control$ID_t, c(0, 0, 1, 2, 3))
   expect_equal(result$Surgery$ID_t, c(0, 1, 0, 1, 2))
-  expect_equal(result$Control$censoring, c(0, 0, 0, 0, 1))
-  expect_equal(result$Surgery$censoring, c(0, 1, 0, 0, 0))
-  expect_equal(result$Surgery$outcome, c(0, 0, 0, 0, 1))
+  expect_equal(unname(result$Control$censoring), c(0, 0, 0, 0, 1))
+  expect_equal(unname(result$Surgery$censoring), c(0, 1, 0, 0, 0))
+  expect_equal(unname(result$Surgery$outcome), c(0, 0, 0, 0, 1))
 })
 
 test_that("create_final_data reports missing clone columns by arm", {
